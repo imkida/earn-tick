@@ -448,7 +448,7 @@
         <button data-speed="3600" aria-pressed="true">×3600</button>
         <button data-speed="86400" aria-pressed="false">×86400</button>
       </div>
-      <p class="note">×3600：现实 1 秒走过 1 个工时小时。模拟只在页面开着时推进，离开自动暂停；模拟赚的钱不进真实账本。</p>
+      <p class="note">×3600：现实 1 秒 = 1 个工时小时。离开页面就暂停，钱不进账本。</p>
     </div>
   </div>
 
@@ -473,7 +473,7 @@
       <button id="btnResetAll">从零开始</button>
       <button id="btnUndo">回到上一份</button>
     </div>
-    <p class="note" id="saveNote">每隔几秒自动存一次，关掉页面也不丢。</p>
+    <p class="note" id="saveNote">自动存，关掉也不丢。</p>
   </div>
 
   <div class="sheet-foot"><button class="primary" id="btnSettingsDone" style="width:100%">好了</button></div>
@@ -502,7 +502,7 @@
       <button class="pick" data-share="bill" aria-pressed="false"><strong>账单</strong><span>带钱，不带时间</span></button>
       <button class="pick" data-share="rhythm" aria-pressed="false"><strong>节奏卡</strong><span>只让人看你在忙</span></button>
     </div>
-    <p class="note" id="shareNote">默认「战报」：别人能看懂你的进度，但算不出你的工资。</p>
+    <p class="note" id="shareNote">别人看得懂进度，算不出工资。</p>
     <button class="linkbtn" id="btnShareApp">把「每秒」发给别人 <i>只发链接，不带你任何数据</i></button>
   </div>
 
@@ -609,21 +609,24 @@
       var T = TEMPLATES[k];
       if (!T.catalog) return;
       var cat = T.catalog.slice().sort(function (a, b) { return a.v - b.v; });
-      var used = {}, out = [], floorV = 0;
-      for (var i = 0; i < SLOTS.length; i++) {
+      var used = {}, out = [], ceilV = Infinity;
+      // 从最长的一档往下配：大件稀少，先让它们各就各位
+      for (var i = SLOTS.length - 1; i >= 0; i--) {
         var target = day * SLOTS[i], best = -1, bestD = Infinity;
         for (var j = 0; j < cat.length; j++) {
           var it = cat[j];
-          if (used[it.n] || it.v <= floorV * 1.01) continue;
+          if (used[it.n] || it.v >= ceilV * 0.99) continue;
           var d = Math.abs(Math.log(it.v / Math.max(0.5, target)));
           if (d < bestD) { bestD = d; best = j; }
         }
         if (best < 0) break;
-        used[cat[best].n] = 1; out.push(cat[best]); floorV = cat[best].v;
+        used[cat[best].n] = 1; out.push(cat[best]); ceilV = cat[best].v;
       }
+      out.reverse();
       if (out.length) T.items = out;
     });
   }
+
   function isRunning() { return S.sim.on ? S.sim.since !== null : S.since !== null; }
   function mult() { return S.sim.on ? S.sim.speed : 1; }
   function cn(n) { return Number(n).toLocaleString('en-US'); }
@@ -1180,7 +1183,9 @@
     var pct = Math.round((p.to / p.from - 1) * 100);
     el.raiseNum.innerHTML = '¥' + cn(Math.round(p.from)) + ' <span class="arrow">→</span> ¥' + cn(Math.round(p.to)) +
       '<span class="pct">+' + pct + '%</span>';
-    el.raiseSub.textContent = '阶梯重算：从「' + its[0].n + '」到「' + its[its.length - 1].n + '」。今天攒下的，按新数字重算过。';
+    el.raiseSub.innerHTML = '目标也跟着涨了<br>' +
+      '<b>「' + its[0].n + '」→「' + its[its.length - 1].n + '」</b><br>' +
+      '今天攒的按新数重算。';
     el.raise.hidden = false;
     burst();
   }
@@ -1284,7 +1289,7 @@
     var m = isSim ? tAll : (statsRange === 'today' ? tToday : tAll);
 
     el.statsSeg.style.display = isSim ? 'none' : 'grid';
-    el.statsSub.textContent = (isSim ? '本轮模拟' : (statsRange === 'today' ? '今天' : '累计')) + ' · 按「' + tpl().name + '」的顺序，一件一件换';
+    el.statsSub.textContent = (isSim ? '本轮模拟' : (statsRange === 'today' ? '今天' : '累计')) + ' · 一件一件换';
     el.statAmount.textContent = S.hideMoney ? '¥ ······' :
       ('¥' + cn(Math.floor(m)) + '.' + String(Math.floor(m * 100) % 100).padStart(2, '0'));
 
@@ -1377,7 +1382,6 @@
       bodyHtml +
       '<footer><div class="cta">日常的每秒都有钱</div>' +
       '<a class="url" href="' + SHARE_URL + '">' + SHARE_URL.replace(/^https:\/\//, '') + '</a>' +
-      '<p class="tiny">数据只在你自己浏览器里，没上传、没联网。</p>' +
       '</footer></div></body></html>';
   }
 
@@ -1404,7 +1408,7 @@
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
         '<h1>' + line + '</h1>' +
-        '<p class="sub">剩下的就不说了。想知道自己的一秒值多少钱，点下面的地址。</p>');
+        '<p class="sub">剩下的就不说了。</p>');
     }
 
     if (shareMode === 'rhythm') {
@@ -1415,8 +1419,7 @@
         '<p class="sub">' + blocks.note + '</p>' +
         '<div style="margin-top:22px">' + blocks.svg + '</div>' +
         '<div class="stats"><div><span>时段</span><b>' + blocks.span + '</b></div>' +
-        '<div><span>最长一段</span><b>' + (blocks.longest || '—') + '</b></div></div>' +
-        '<p class="tiny" style="margin-top:16px">只显示时间结构，不含任何金额。</p>');
+        '<div><span>最长一段</span><b>' + (blocks.longest || '—') + '</b></div></div>');
     }
 
     var money = shareMode === 'bill';
@@ -1433,8 +1436,8 @@
 
     var head = money
       ? '<div class="hero-num"><i>≈¥</i>' + cn(roundMoney(allM)) + '</div>' +
-        '<p class="sub">17 档里，攒到了 ' + reached.length + ' 档</p>'
-      : '<h1>攒到 <b>' + reached.length + '</b> 档</h1><p class="sub">都是一天一天换来的，没动存款</p>';
+        '<p class="sub">17 档里，第 ' + reached.length + ' 档。</p>'
+      : '<h1>攒到 <b>' + reached.length + '</b> 档</h1><p class="sub">存款一分没动。</p>';
 
     var stats = money
       ? '<div class="stats"><div><span>今天</span><b>≈¥' + cn(roundMoney(todayM)) + '</b></div>' +
@@ -1478,7 +1481,6 @@
       html += '<span style="color:#94836F;font-size:12px;padding-bottom:4px">+' + (segs.length - shown.length) + '</span>';
     }
     html += '</div>';
-    html += '<p class="tiny" style="margin:10px 0 0">一个圆 = 一段时间，越久越大。</p>';
 
     return {
       svg: html, count: segs.length, note: note,
