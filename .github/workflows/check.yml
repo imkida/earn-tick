@@ -13,7 +13,8 @@ jobs:
 
       - name: 必需文件齐全
         run: |
-          for f in index.html manifest.json sw.js icon.svg icon-192.png icon-512.png LICENSE README.md; do
+          for f in index.html manifest.json sw.js icon.svg icon-192.png icon-512.png \
+                   icon-maskable-512.png apple-touch-icon.png favicon-32.png LICENSE README.md; do
             test -s "$f" || { echo "缺少 $f"; exit 1; }
           done
           echo "ok"
@@ -34,15 +35,25 @@ jobs:
 
       - name: 隐私底线 —— 页面不请求任何外部资源
         run: |
-          # 只允许 SVG 命名空间，不允许任何第三方域名（无统计、无字体 CDN、无接口）
+          # 允许：SVG 命名空间；以及分享页里那个「指向本项目自己的链接」
+          # （是给用户点的 <a href>，不是页面自己发的请求）
+          ALLOW='www\.w3\.org|imkida\.github\.io/earn-tick'
           bad=$(grep -oE 'https?://[^"'"'"' )]+' index.html sw.js manifest.json \
-                | grep -v 'www.w3.org' || true)
+                | sed 's/^[^:]*://' | grep -vE "$ALLOW" || true)
           if [ -n "$bad" ]; then
             echo "发现外部引用，违反「数据不离开浏览器」："
             echo "$bad"
             exit 1
           fi
           echo "no external requests"
+
+      - name: 隐私底线 —— 没有任何网络调用
+        run: |
+          # fetch / XHR / sendBeacon / WebSocket / navigator.share 之外的出网口子都不许有
+          if grep -qE 'fetch\(|XMLHttpRequest|sendBeacon|new WebSocket|EventSource' index.html; then
+            echo "index.html 出现网络调用"; exit 1
+          fi
+          echo "no network calls"
 
       - name: 保持单文件 —— JS/CSS 不许外链
         run: |
@@ -53,6 +64,14 @@ jobs:
             echo "index.html 引用了外部样式"; exit 1
           fi
           echo "single-file ok"
+
+      - name: 隐私底线 —— 分享页不含工时
+        run: |
+          # 工资 = 金额 ÷ 工时；分享页里两者不能同时存在，否则可以一步反推时薪
+          if grep -q "dur(workedM)\|工作 ' + dur\|已工作 ' + dur" index.html; then
+            echo "分享页又出现工时了"; exit 1
+          fi
+          echo "share page has no hours"
 
       - name: 体积守门 —— 首屏文件不超过 120KB
         run: |

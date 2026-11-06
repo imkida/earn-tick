@@ -1,16 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FBF6EF"/>
-      <stop offset="1" stop-color="#F3E4D6"/>
-    </linearGradient>
-    <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E87A59"/>
-      <stop offset="1" stop-color="#C25A3D"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#g)"/>
-  <text x="256" y="330" text-anchor="middle" font-family="-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif"
-        font-size="250" font-weight="700" fill="url(#a)" letter-spacing="-12">¥</text>
-  <circle cx="256" cy="392" r="9" fill="#E07050" opacity=".55"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#FBF6EF"/>
+  <circle cx="246" cy="274" r="138" fill="#E07050"/>
+  <circle cx="246" cy="274" r="117" fill="none" stroke="#C25A3D" stroke-opacity="0.26" stroke-width="9"/>
+  <g transform="translate(246,280) scale(0.84) translate(-256,-268)"
+     stroke="#FBF6EF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M198 200 L256 254 L314 200"/><path d="M256 252 L256 336"/>
+    <path d="M208 276 H304"/><path d="M208 308 H304"/>
+  </g>
+  <circle cx="358" cy="160" r="24" fill="#E07050"/><circle cx="398" cy="126" r="13" fill="#E07050" opacity="0.42"/><circle cx="428" cy="100" r="7" fill="#E07050" opacity="0.22"/>
 </svg>
