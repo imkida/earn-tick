@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#FBF6EF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="每秒">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>每秒</title>
+<style>
+  :root{
+    --paper:#FBF6EF;
+    --paper-2:#F3E9DC;
+    --ink:#2B211C;
+    --ink-2:#6F6058;
+    --ink-3:#7E6F64;
+    --accent:#E07050;
+    --accent-2:#C25A3D;
+    --accent-wash:rgba(224,112,80,.13);
+    --card:rgba(255,255,255,.62);
+    --line:rgba(43,33,28,.07);
+    --shadow:0 18px 40px -22px rgba(80,48,32,.45);
+    --radius:26px;
+  }
+  body[data-theme="night"]{
+    --paper:#17120F;
+    --paper-2:#221A15;
+    --ink:#F7EDE3;
+    --ink-2:#B4A197;
+    --ink-3:#9C8B80;
+    --accent:#F0845F;
+    --accent-2:#FFA07E;
+    --accent-wash:rgba(240,132,95,.16);
+    --card:rgba(255,255,255,.055);
+    --line:rgba(255,255,255,.07);
+    --shadow:0 18px 40px -24px rgba(0,0,0,.8);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{height:100%}
+  body{height:100%;height:100dvh}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB","Helvetica Neue",system-ui,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    overflow:hidden;
+    overscroll-behavior:none;
+    transition:background .5s ease,color .5s ease;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 极淡的暖色氛围，不做花哨渐变 */
+  body::before{
+    content:"";position:fixed;inset:-20% -20% auto -20%;height:70vh;pointer-events:none;
+    background:radial-gradient(68% 52% at 50% 4%, var(--accent-wash), transparent 72%);
+    opacity:.85;transition:opacity .6s ease;
+  }
+  .grain{
+    position:fixed;inset:0;pointer-events:none;opacity:.035;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  body[data-theme="night"] .grain{mix-blend-mode:screen;opacity:.05}
+
+  .app{
+    position:relative;height:100%;
+    display:flex;flex-direction:column;
+    padding:calc(env(safe-area-inset-top) + 18px) 26px calc(env(safe-area-inset-bottom) + 22px);
+    max-width:520px;margin:0 auto;
+  }
+
+  /* 顶栏 */
+  .top{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+  .date{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-3);letter-spacing:.02em}
+  .date .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-3);opacity:.5}
+  .gear{
+    border:0;background:transparent;padding:8px;margin:-8px -8px -8px 0;color:var(--ink-3);
+    display:grid;place-items:center;cursor:pointer;opacity:.75;transition:opacity .2s;
+  }
+  .gear:active{opacity:1}
+
+  /* 主数字 */
+  .hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:19px;padding-bottom:8px}
+  .rate{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;letter-spacing:.06em;color:var(--ink-2);
+    padding:7px 14px 7px 12px;border-radius:999px;
+    background:var(--card);border:1px solid var(--line);
+  }
+  .rate b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);letter-spacing:0}
+  .beacon{width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:.35;transition:opacity .3s}
+  .running .beacon{animation:beat 1s steps(1,end) infinite}
+  @keyframes beat{0%,70%{opacity:1;transform:scale(1.25)}71%,100%{opacity:.3;transform:scale(1)}}
+
+  .amount{
+    display:flex;align-items:baseline;justify-content:center;
+    font-size:clamp(62px,21.5vw,104px);line-height:.94;font-weight:640;
+    letter-spacing:-.035em;font-variant-numeric:tabular-nums;
+    font-feature-settings:"tnum" 1,"ss01" 1;
+    color:var(--ink);transition:opacity .35s ease;
+  }
+  .amount .cur{font-size:.42em;font-weight:540;color:var(--ink-2);margin-right:.06em;letter-spacing:0;transform:translateY(-.12em)}
+  .amount .dec{display:inline-flex;align-items:baseline;font-size:.62em;font-weight:560;color:var(--ink-2);letter-spacing:-.02em}
+  .amount .micro{
+    font-size:.64em;font-weight:560;color:var(--accent);
+    margin-left:.01em;opacity:.85;font-variant-numeric:tabular-nums;
+  }
+  .idle .amount{opacity:.55}
+  .pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.022)}100%{transform:scale(1)}}
+
+  .meta{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-3);letter-spacing:.01em}
+  .meta .sep{opacity:.4}
+  .aside{font-size:12.5px;color:var(--ink-3);opacity:.9;letter-spacing:.02em;margin-top:2px}
+  .aside b{color:var(--ink-2);font-weight:600}
+
+  /* 目标卡 */
+  .goal{
+    flex:0 0 auto;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:17px 19px 15px;
+    box-shadow:var(--shadow);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    transition:transform .45s cubic-bezier(.2,.9,.3,1),opacity .3s ease;
+  }
+  .goal.swap{transform:translateY(-4px);box-shadow:0 22px 44px -26px rgba(224,112,80,.75),0 0 0 1px var(--accent-wash)}
+  .goal-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .goal-name{font-size:15px;font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .goal-name .m{font-size:15px;margin-right:6px;filter:saturate(.9)}
+  .goal-price{font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .track{
+    position:relative;height:6px;border-radius:99px;background:rgba(43,33,28,.07);
+    margin:13px 0 11px;overflow:hidden;
+  }
+  body[data-theme="night"] .track{background:rgba(255,255,255,.09)}
+  .fill{
+    position:absolute;inset:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    transform-origin:left center;transform:scaleX(0);
+    transition:transform .9s cubic-bezier(.25,1,.3,1);
+  }
+  .goal-foot{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink-2);letter-spacing:.01em}
+  .goal-foot #goalEta{color:var(--ink-3)}
+
+  /* 底部动作 */
+  .actions{flex:0 0 auto;margin-top:16px}
+  .primary{
+    width:100%;height:57px;border:0;border-radius:19px;cursor:pointer;
+    font-family:inherit;font-size:16.5px;font-weight:600;letter-spacing:.04em;
+    color:#fff;background:linear-gradient(180deg,#E87A59,var(--accent-2));
+    box-shadow:0 12px 26px -12px rgba(194,90,61,.85),inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .16s ease,box-shadow .2s ease,filter .2s;
+  }
+  .primary:active{transform:scale(.977);box-shadow:0 8px 18px -12px rgba(194,90,61,.8)}
+  .primary.ghost{
+    color:var(--ink);background:var(--card);border:1px solid var(--line);
+    box-shadow:0 10px 22px -18px rgba(80,48,32,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  }
+  .hint{margin:11px 0 0;text-align:center;font-size:12.5px;color:var(--ink-3);min-height:16px;letter-spacing:.02em}
+
+  /* 弹层 */
+  .scrim{
+    position:fixed;inset:0;background:rgba(48,32,24,.24);opacity:0;pointer-events:none;
+    transition:opacity .32s ease;z-index:30;
+  }
+  .scrim.on{opacity:1;pointer-events:auto}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:31;
+    background:var(--paper-2);color:var(--ink);
+    border-radius:28px 28px 0 0;padding:10px 24px calc(env(safe-area-inset-bottom) + 26px);
+    transform:translateY(102%);transition:transform .42s cubic-bezier(.22,.95,.28,1);
+    max-width:520px;margin:0 auto;box-shadow:0 -20px 50px -30px rgba(0,0,0,.5);
+  }
+  .sheet.on{transform:translateY(0)}
+  body[data-theme="night"] .sheet{background:#201814}
+  .grab{width:38px;height:4px;border-radius:99px;background:var(--ink-3);opacity:.3;margin:4px auto 16px}
+  .sheet h2{margin:0 0 4px;font-size:20px;font-weight:640;letter-spacing:-.01em}
+  .sheet p.sub{margin:0 0 20px;font-size:13.5px;color:var(--ink-3);line-height:1.5}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .field:last-of-type{border-bottom:0}
+  .field label{font-size:15px;color:var(--ink)}
+  .field .unit{font-size:13px;color:var(--ink-3);margin-left:6px}
+  .stepper{display:flex;align-items:center;gap:2px}
+  .stepper button{
+    width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);font-size:19px;line-height:1;cursor:pointer;font-family:inherit;
+  }
+  .stepper button:active{background:var(--accent-wash)}
+  .stepper input{
+    width:92px;height:38px;text-align:center;border:0;background:transparent;
+    font-family:inherit;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;
+    color:var(--ink);outline:none;
+  }
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .row-actions{display:flex;gap:10px;margin-top:22px}
+  .row-actions .primary{height:52px;font-size:16px}
+  .row-actions .ghost{flex:0 0 42%;color:var(--ink);background:var(--card);border:1px solid var(--line);box-shadow:none}
+  .theme-pick{display:flex;gap:8px}
+  .theme-pick button{
+    flex:1;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+    color:var(--ink-2);font-size:13.5px;font-family:inherit;cursor:pointer;
+  }
+  .theme-pick button[aria-pressed="true"]{background:var(--accent-wash);border-color:transparent;color:var(--accent-2);font-weight:600}
+  .first{margin-top:6px}
+  .first .big-input{
+    display:flex;align-items:baseline;gap:6px;margin:6px 0 18px;
+  }
+  .first .big-input span{font-size:26px;color:var(--ink-3)}
+  .first .big-input input{
+    width:100%;border:0;background:transparent;outline:none;font-family:inherit;
+    font-size:46px;font-weight:640;letter-spacing:-.03em;color:var(--ink);
+    font-variant-numeric:tabular-nums;padding:0;
+  }
+  .first .big-input input::placeholder{color:var(--ink-3);opacity:.45}
+
+  canvas.burst{position:fixed;inset:0;pointer-events:none;z-index:25}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important;transition-duration:.001s !important}
+  }
+  @media (max-height:680px){
+    .hero{gap:13px}
+    .amount{font-size:clamp(54px,18vw,84px)}
+    .rate{padding:6px 12px;font-size:12.5px}
+    .goal{padding:14px 17px 12px}
+  }
+</style>
+</head>
+<body class="idle">
+<div class="grain"></div>
+
+<main class="app">
+  <header class="top">
+    <div class="date"><span id="dayLabel">今天</span><span class="dot"></span><span id="weekLabel"></span></div>
+    <button class="gear" id="btnSettings" aria-label="设置">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.4"/><circle cx="9" cy="17" r="2.4"/>
+      </svg>
+    </button>
+  </header>
+
+  <section class="hero">
+    <div class="rate">每秒 <b id="rateVal">¥0.0000</b><span class="beacon" id="beacon"></span></div>
+    <div class="amount" id="amount">
+      <span class="cur">¥</span><span id="amtInt">0</span>
+      <span class="dec">.<span id="amtDec">00</span><span class="micro" id="amtMicro">0</span></span>
+    </div>
+    <div class="meta"><span id="workedLabel">还没开始</span><span class="sep">·</span><span id="slackLabel">摸鱼 0 分</span></div>
+    <div class="aside" id="aside"></div>
+  </section>
+
+  <section class="goal" id="goalCard">
+    <div class="goal-top">
+      <span class="goal-name" id="goalName"><span class="m">☕</span>一杯冰美式</span>
+      <span class="goal-price" id="goalPrice">¥15</span>
+    </div>
+    <div class="track"><div class="fill" id="goalFill"></div></div>
+    <div class="goal-foot"><span id="goalLeft">还差 ¥15.00</span><span id="goalEta">约 5 分钟</span></div>
+  </section>
+
+  <div class="actions">
+    <button class="primary" id="btnMain">开始上班</button>
+  </div>
+  <p class="hint" id="hint">点一下，钱就开始走了</p>
+</main>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- 首次设置 -->
+<section class="sheet first" id="sheetFirst" aria-hidden="true">
+  <div class="grab"></div>
+  <h2>先说说你的月薪</h2>
+  <p class="sub">只存在这台手机上，不联网，不上传。</p>
+  <div class="big-input"><span>¥</span><input id="salaryInput" type="number" inputmode="decimal" placeholder="20000" autocomplete="off"></div>
+  <div class="field"><label>每月工作<span class="unit">天</span></label>
+    <div class="stepper"><button data-step="workdays" data-dir="-1">−</button><input id="workdaysInput" type="number" inputmode="decimal" value="21.75"><button data-step="workdays" data-dir="1">+</button></div>
+  </div>
+  <div class="field"><label>每天工作<span class="unit">小时</span></label>
+    <div class="stepper"><button data-step="hours" data-dir="-1">−</button><input id="hoursInput" type="number" inputmode="decimal" value="8"><button data-step="hours" data-dir="1">+</button></div>
+  </div>
+  <div class="row-actions"><button class="primary" id="btnFirstSave">开始</button></div>
+</section>
+
+<!-- 设置 -->
+<section class="sheet" id="sheetSettings" aria-hidden="true">
+  <div class="grab"></div>
+  <h2>调整一下</h2>
+  <p class="sub">改了立刻生效，今天的记录会重新算。</p>
+  <div class="field"><label>月薪<span class="unit">元</span></label>
+    <div class="stepper"><button data-step="salary" data-dir="-1000">−</button><input id="setSalary" type="number" inputmode="decimal"><button data-step="salary" data-dir="1000">+</button></div>
+  </div>
+  <div class="field"><label>每月工作<span class="unit">天</span></label>
+    <div class="stepper"><button data-step="workdays" data-dir="-1">−</button><input id="setWorkdays" type="number" inputmode="decimal"><button data-step="workdays" data-dir="1">+</button></div>
+  </div>
+  <div class="field"><label>每天工作<span class="unit">小时</span></label>
+    <div class="stepper"><button data-step="hours" data-dir="-1">−</button><input id="setHours" type="number" inputmode="decimal"><button data-step="hours" data-dir="1">+</button></div>
+  </div>
+  <div class="field"><label>外观</label>
+    <div class="theme-pick">
+      <button data-theme-opt="auto" aria-pressed="true">自动</button>
+      <button data-theme-opt="day" aria-pressed="false">白天</button>
+      <button data-theme-opt="night" aria-pressed="false">夜里</button>
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="primary" id="btnSettingsDone">好了</button>
+    <button class="primary ghost" id="btnResetDay">重置今天</button>
+  </div>
+</section>
+
+<canvas class="burst" id="burst"></canvas>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'earnTick.v1';
+  var GOALS = [
+    {v: 15,   m: '☕', n: '一杯冰美式'},
+    {v: 28,   m: '🍜', n: '一碗牛肉面'},
+    {v: 38,   m: '🧋', n: '一杯奶茶加料'},
+    {v: 68,   m: '📖', n: '一本书'},
+    {v: 128,  m: '🍽', n: '一顿好的'},
+    {v: 268,  m: '👟', n: '一双帆布鞋'},
+    {v: 688,  m: '🧥', n: '一件外套'},
+    {v: 1288, m: '🏠', n: '一天房租'},
+    {v: 2688, m: '✈️', n: '一张机票'}
+  ];
+
+  var S = {
+    salary: null,
+    workdays: 21.75,
+    hours: 8,
+    day: null,          // yyyy-mm-dd
+    earnedMs: 0,        // 已在运行中累计的工作毫秒
+    since: null,        // 本次开始运行的时间戳
+    pausedAt: null,     // 暂停时刻（用于累计摸鱼时长）
+    slackMs: 0,         // 今天摸鱼毫秒
+    theme: 'auto',
+    goalIdx: 0
+  };
+
+  var el = {};
+  ['amount','amtInt','amtDec','amtMicro','rateVal','workedLabel','slackLabel','goalCard','goalName','goalPrice',
+   'goalFill','goalLeft','goalEta','btnMain','hint','btnSettings','scrim','sheetFirst','sheetSettings','burst',
+   'dayLabel','weekLabel','salaryInput','workdaysInput','hoursInput','btnFirstSave','aside',
+   'setSalary','setWorkdays','setHours','btnSettingsDone','btnResetDay'].forEach(function (id) { el[id] = document.getElementById(id); });
+
+  /* ---------- 工具 ---------- */
+  function pad(n, w) { n = String(n); while (n.length < (w || 2)) n = '0' + n; return n; }
+  function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+  function todayKey(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function money(v, digits) {
+    digits = digits === undefined ? 2 : digits;
+    return v.toFixed(digits);
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        for (var k in S) if (o[k] !== undefined) S[k] = o[k];
+      }
+    } catch (e) {}
+    rollDayIfNeeded();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  }
+  function rollDayIfNeeded() {
+    var k = todayKey();
+    if (S.day !== k) {
+      S.day = k;
+      S.earnedMs = 0;
+      S.slackMs = 0;
+      S.goalIdx = 0;
+      S.since = S.since ? Date.now() : null;   // 跨天仍在运行 → 从此刻重新计
+    }
+  }
+
+  /* ---------- 计算 ---------- */
+  function ratePerSecond() {
+    if (!S.salary) return 0;
+    var secs = S.workdays * S.hours * 3600;
+    return secs > 0 ? S.salary / secs : 0;
+  }
+  function ratePerHour() { return ratePerSecond() * 3600; }
+
+  function isRunning() { return S.since !== null; }
+
+  function workMs(now) {
+    rollDayIfNeeded();
+    var base = S.earnedMs;
+    if (S.since !== null) base += Math.max(0, now - S.since);
+    return base;
+  }
+  function earned(now) { return ratePerSecond() * workMs(now) / 1000; }
+
+  /* ---------- 渲染 ---------- */
+  var lastText = { i: '', d: '', m: '' };
+  var lastGoalIdx = -1;
+
+  function render(now) {
+    var r = ratePerSecond();
+    var e = earned(now);
+
+    var i = Math.floor(e);
+    var dec = Math.floor((e - i) * 100);
+    var micro = Math.floor((e * 1000) % 10);
+
+    var ti = String(i), td = pad(dec, 2), tm = String(micro);
+    if (ti !== lastText.i) { el.amtInt.textContent = ti; lastText.i = ti; }
+    if (td !== lastText.d) { el.amtDec.textContent = td; lastText.d = td; }
+    if (tm !== lastText.m) { el.amtMicro.textContent = tm; lastText.m = tm; }
+
+    var running = isRunning();
+    document.body.classList.toggle('running', running);
+    document.body.classList.toggle('idle', !running);
+
+    // 时间行
+    var w = Math.floor(workMs(now) / 60000);
+    if (w >= 60) el.workedLabel.textContent = '已工作 ' + Math.floor(w / 60) + ' 小时 ' + pad(w % 60) + ' 分';
+    else if (w > 0) el.workedLabel.textContent = '已工作 ' + w + ' 分钟';
+    else el.workedLabel.textContent = running ? '刚开始' : '还没开始';
+    var s = Math.floor(S.slackMs / 60000);
+    el.slackLabel.textContent = s > 0 ? '摸鱼 ' + s + ' 分' : '摸鱼 0 分';
+
+    // 主按钮
+    if (!S.salary) {
+      el.btnMain.textContent = '填写月薪';
+      el.hint.textContent = '填完就能看到每秒进账';
+    } else if (running) {
+      el.btnMain.textContent = '摸鱼一下';
+      el.hint.textContent = '钱在走，别停太久';
+    } else {
+      el.btnMain.textContent = S.earnedMs > 0 || S.slackMs > 0 ? '继续搬砖' : '开始上班';
+      el.hint.textContent = S.slackMs > 0 ? '刚才那杯咖啡喝完了吗' : '点一下，钱就开始走了';
+    }
+
+    // 换算一句俏皮话
+    if (e > 0) {
+      var unit = GOALS[1].v;
+      var cups = e / unit;
+      el.aside.innerHTML = cups < 1
+        ? '还差 <b>¥' + money(unit - e) + '</b> 就够一碗牛肉面'
+        : '今天约等于 <b>' + (cups >= 10 ? Math.round(cups) : cups.toFixed(1)) + '</b> 碗牛肉面';
+    } else {
+      el.aside.innerHTML = '';
+    }
+
+    // 目标
+    if (!celebrating) {
+    var idx = 0, prev = 0;
+    for (var g = 0; g < GOALS.length; g++) {
+      if (e < GOALS[g].v) { idx = g; prev = g > 0 ? GOALS[g - 1].v : 0; break; }
+      idx = -1;
+    }
+    if (idx === -1) { idx = GOALS.length - 1; prev = GOALS[GOALS.length - 2].v; }
+    if (idx !== lastGoalIdx) {
+      lastGoalIdx = idx;
+      el.goalName.innerHTML = '<span class="m">' + GOALS[idx].m + '</span>' + GOALS[idx].n;
+      el.goalPrice.textContent = '¥' + GOALS[idx].v;
+    }
+    var span = Math.max(0.01, GOALS[idx].v - prev);
+    var p = clamp((e - prev) / span, 0, 1);
+    el.goalFill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    var left = Math.max(0, GOALS[idx].v - e);
+    el.goalLeft.textContent = '还差 ¥' + money(left);
+    if (r > 0) {
+      var sec = left / r;
+      el.goalEta.textContent = sec < 60 ? '还有 ' + Math.ceil(sec) + ' 秒'
+        : sec < 3600 ? '还有 ' + Math.ceil(sec / 60) + ' 分钟'
+        : '还有 ' + (sec / 3600).toFixed(1) + ' 小时';
+    } else {
+      el.goalEta.textContent = '';
+    }
+
+    // 达成检测
+    var reached = 0;
+    for (var k = 0; k < GOALS.length; k++) if (e >= GOALS[k].v) reached = k + 1;
+    if (reached > S.goalIdx) {
+      S.goalIdx = reached;
+      save();
+      celebrate(GOALS[reached - 1]);
+    }
+    }
+  }
+
+  function loop() {
+    var now = Date.now();
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- 达成庆祝 ---------- */
+  var celebrateTimer = null;
+  var celebrating = false;
+  function celebrate(goal) {
+    celebrating = true;
+    var card = el.goalCard;
+    card.classList.add('swap');
+    el.goalName.innerHTML = '<span class="m">' + goal.m + '</span>' + goal.n + ' · 到手';
+    el.goalPrice.textContent = '¥' + goal.v;
+    el.goalLeft.textContent = '这一笔，赚回来了';
+    el.goalEta.textContent = '';
+    el.goalFill.style.transform = 'scaleX(1)';
+    el.amount.classList.remove('pop');
+    void el.amount.offsetWidth;
+    el.amount.classList.add('pop');
+    if (navigator.vibrate) { try { navigator.vibrate([18, 70, 26]); } catch (e) {} }
+    burst();
+    clearTimeout(celebrateTimer);
+    celebrateTimer = setTimeout(function () {
+      celebrating = false;
+      card.classList.remove('swap');
+      lastGoalIdx = -1;
+      render(Date.now());
+    }, 2200);
+  }
+
+  function burst() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cv = el.burst, ctx = cv.getContext('2d');
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    ctx.scale(dpr, dpr);
+    var cx = innerWidth / 2, cy = innerHeight * 0.78;
+    var rect = el.goalCard.getBoundingClientRect();
+    if (rect && rect.top) { cx = rect.left + rect.width / 2; cy = rect.top + rect.height / 2; }
+    var colors = ['#E07050', '#F0A08A', '#E9C97E', '#C25A3D'];
+    var ps = [];
+    for (var i = 0; i < 54; i++) {
+      var a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.75, sp = 3.0 + Math.random() * 6.0;
+      ps.push({x: cx + (Math.random() - 0.5) * 90, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+               r: 1.8 + Math.random() * 3.0, c: colors[(Math.random() * colors.length) | 0], life: 1});
+    }
+    var t0 = performance.now();
+    (function step(t) {
+      var dt = Math.min(32, t - t0); t0 = t;
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      var alive = false;
+      ps.forEach(function (p) {
+        p.vy += 0.17 * (dt / 16); p.vx *= 0.972; p.vy *= 0.988;
+        p.x += p.vx * (dt / 16); p.y += p.vy * (dt / 16);
+        p.life -= 0.013 * (dt / 16);
+        if (p.life > 0) {
+          alive = true;
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = p.c;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+      ctx.globalAlpha = 1;
+      if (alive) requestAnimationFrame(step);
+      else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(t0);
+  }
+
+  /* ---------- 行为 ---------- */
+  function start() {
+    if (!S.salary) { openFirst(); return; }
+    rollDayIfNeeded();
+    if (S.pausedAt) { S.slackMs += Math.max(0, Date.now() - S.pausedAt); S.pausedAt = null; }
+    S.since = Date.now();
+    save();
+    render(Date.now());
+  }
+  function pause() {
+    if (S.since === null) return;
+    var now = Date.now();
+    S.earnedMs += Math.max(0, now - S.since);
+    S.since = null;
+    S.pausedAt = now;
+    save();
+    render(now);
+  }
+  function resetDay() {
+    S.earnedMs = 0; S.slackMs = 0; S.goalIdx = 0; S.since = null; S.pausedAt = null;
+    lastGoalIdx = -1; save(); render(Date.now());
+  }
+
+  el.btnMain.addEventListener('click', function () {
+    if (!S.salary) { openFirst(); return; }
+    if (isRunning()) pause(); else start();
+  });
+
+  /* 设置面板 */
+  function openFirst() {
+    el.salaryInput.value = S.salary || '';
+    el.workdaysInput.value = S.workdays;
+    el.hoursInput.value = S.hours;
+    openSheet(el.sheetFirst);
+    setTimeout(function () { el.salaryInput.focus(); }, 320);
+  }
+  function openSettings() {
+    el.setSalary.value = S.salary || '';
+    el.setWorkdays.value = S.workdays;
+    el.setHours.value = S.hours;
+    var t = S.theme || 'auto';
+    document.querySelectorAll('[data-theme-opt]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.themeOpt === t));
+    });
+    openSheet(el.sheetSettings);
+  }
+  function openSheet(sheet) {
+    closeSheets(true);
+    sheet.classList.add('on');
+    sheet.setAttribute('aria-hidden', 'false');
+    el.scrim.classList.add('on');
+    document.body.classList.add('sheet-open');
+    if (window._openSheet) window._openSheet = sheet; else window._openSheet = sheet;
+  }
+  function closeSheets(keepScrim) {
+    [el.sheetFirst, el.sheetSettings].forEach(function (s) {
+      s.classList.remove('on'); s.setAttribute('aria-hidden', 'true');
+    });
+    if (!keepScrim) el.scrim.classList.remove('on');
+    if (!keepScrim) document.body.classList.remove('sheet-open');
+  }
+
+  el.scrim.addEventListener('click', function () { closeSheets(); });
+  el.btnSettings.addEventListener('click', openSettings);
+
+  function applyTheme() {
+    var t = S.theme || 'auto';
+    var night = false;
+    if (t === 'night') night = true;
+    else if (t === 'day') night = false;
+    else { var h = new Date().getHours(); night = (h >= 20 || h < 7); }
+    document.body.setAttribute('data-theme', night ? 'night' : 'day');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', night ? '#17120F' : '#FBF6EF');
+  }
+
+  function commitSettings(salary, workdays, hours, close) {
+    salary = Math.max(0, Number(salary) || 0);
+    workdays = clamp(Number(workdays) || 21.75, 1, 31);
+    hours = clamp(Number(hours) || 8, 1, 24);
+    var firstTime = !S.salary;
+    S.salary = salary; S.workdays = workdays; S.hours = hours;
+    save(); render(Date.now());
+    if (close) closeSheets();
+    if (firstTime && salary > 0) {
+      // 首填完直接开始跑，省一次点击
+      S.since = Date.now(); save(); render(Date.now());
+    }
+  }
+
+  el.btnFirstSave.addEventListener('click', function () {
+    if (!Number(el.salaryInput.value)) { el.salaryInput.focus(); return; }
+    commitSettings(el.salaryInput.value, el.workdaysInput.value, el.hoursInput.value, true);
+  });
+  el.btnSettingsDone.addEventListener('click', function () {
+    commitSettings(el.setSalary.value, el.setWorkdays.value, el.setHours.value, true);
+  });
+  el.btnResetDay.addEventListener('click', function () {
+    resetDay(); closeSheets();
+  });
+
+  // 步进器（两个面板共用）
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-step]');
+    if (!b) return;
+    var which = b.dataset.step, dir = Number(b.dataset.dir);
+    var map = {
+      salary: [el.setSalary],
+      workdays: [el.setWorkdays, el.workdaysInput],
+      hours: [el.setHours, el.hoursInput]
+    };
+    (map[which] || []).forEach(function (input) {
+      if (!input) return;
+      var cur = Number(input.value) || 0;
+      var step = which === 'salary' ? 1000 : 1;
+      var next = which === 'salary' ? cur + dir : cur + (dir * (which === 'hours' ? 0.5 : 0.25));
+      if (which === 'hours') next = clamp(next, 1, 24);
+      if (which === 'workdays') next = clamp(next, 1, 31);
+      input.value = Number(next.toFixed(2));
+    });
+  });
+
+  // 外观切换
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-theme-opt]');
+    if (!b) return;
+    S.theme = b.dataset.themeOpt;
+    save(); applyTheme();
+    document.querySelectorAll('[data-theme-opt]').forEach(function (x) {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+  });
+
+  // 日期标签
+  function paintDate() {
+    var d = new Date();
+    var wk = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+    el.dayLabel.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    el.weekLabel.textContent = wk;
+  }
+
+  // 切后台/回来看一眼都保存，避免丢时间
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) save(); else { rollDayIfNeeded(); render(Date.now()); }
+  });
+  window.addEventListener('pagehide', save);
+
+  /* ---------- 启动 ---------- */
+  load();
+  paintDate();
+  applyTheme();
+  if (!S.salary) {
+    openFirst();
+  } else {
+    el.rateVal.textContent = '¥' + ratePerSecond().toFixed(4);
+  }
+  // 每秒刷新一次汇率文字（工资改动后）
+  setInterval(function () {
+    el.rateVal.textContent = '¥' + ratePerSecond().toFixed(4);
+    paintDate(); applyTheme();
+  }, 1000);
+
+  requestAnimationFrame(loop);
+
+  // 调参用：控制台可 __earn.patch({earnedMs: 7680000, since: Date.now()})
+  window.__earn = {
+    get state() { return S; },
+    patch: function (o) { Object.assign(S, o); save(); lastGoalIdx = -1; render(Date.now()); },
+    rate: ratePerSecond
+  };
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# 本地预览图 / 部署脚本 / 本机 Caddy 配置，不进仓库
+preview-*.png
+deploy.sh
+earn.caddy
+
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+.vscode/
+.idea/
