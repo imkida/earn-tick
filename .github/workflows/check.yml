@@ -1,0 +1,61 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 必需文件齐全
+        run: |
+          for f in index.html manifest.json sw.js icon.svg icon-192.png icon-512.png LICENSE README.md; do
+            test -s "$f" || { echo "缺少 $f"; exit 1; }
+          done
+          echo "ok"
+
+      - name: manifest 是合法 JSON 且图标存在
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            for (const k of ["name", "start_url", "display", "icons"]) {
+              if (!m[k]) { console.error("manifest 缺少 " + k); process.exit(1); }
+            }
+            for (const i of m.icons) {
+              if (!fs.existsSync(i.src)) { console.error("图标不存在: " + i.src); process.exit(1); }
+            }
+            console.log("manifest ok, " + m.icons.length + " icons");
+          '
+
+      - name: 隐私底线 —— 页面不请求任何外部资源
+        run: |
+          # 只允许 SVG 命名空间，不允许任何第三方域名（无统计、无字体 CDN、无接口）
+          bad=$(grep -oE 'https?://[^"'"'"' )]+' index.html sw.js manifest.json \
+                | grep -v 'www.w3.org' || true)
+          if [ -n "$bad" ]; then
+            echo "发现外部引用，违反「数据不离开浏览器」："
+            echo "$bad"
+            exit 1
+          fi
+          echo "no external requests"
+
+      - name: 保持单文件 —— JS/CSS 不许外链
+        run: |
+          if grep -qE '<script[^>]*src=' index.html; then
+            echo "index.html 引用了外部脚本"; exit 1
+          fi
+          if grep -qE '<link[^>]+stylesheet' index.html; then
+            echo "index.html 引用了外部样式"; exit 1
+          fi
+          echo "single-file ok"
+
+      - name: 体积守门 —— 首屏文件不超过 120KB
+        run: |
+          size=$(stat -c%s index.html)
+          echo "index.html = $size bytes"
+          test "$size" -lt 122880 || { echo "index.html 太大了，注意别引入依赖"; exit 1; }
