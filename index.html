@@ -75,7 +75,7 @@
   .top{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
   .brand{display:flex;align-items:center;gap:10px}
   .brand .mark{font-size:16px;font-weight:700;letter-spacing:.02em}
-  .brand .mark::after{content:"";display:block;height:3px;margin-top:1px;border-radius:9px;background:var(--accent);opacity:.9}
+  .brand .mark{letter-spacing:.01em}
   .brand .meta{font-size:11.5px;letter-spacing:.02em;color:var(--ink-3);font-variant-numeric:tabular-nums;padding-top:3px}
   .tools{display:flex;gap:6px}
   .tools button{
@@ -99,13 +99,17 @@
   .restore button.mute{color:var(--ink-3);font-weight:500}
 
   /* 主区 */
-  .hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  .hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;min-height:0;position:relative}
+  .brand svg{width:22px;height:22px;display:block;flex:0 0 auto}
+  .firstmark{width:40px;height:40px;margin-bottom:12px}
+  .firstmark svg{width:100%;height:100%;display:block}
   .eyebrow{
     display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-3);
     letter-spacing:.02em;margin-bottom:10px;
   }
   .eyebrow .line{display:none}
-  .bean{width:7px;height:7px;border-radius:50%;background:var(--accent);opacity:.35;flex:0 0 auto}
+  .bean{width:13px;height:13px;display:grid;place-items:center;opacity:.42;flex:0 0 auto}
+  .bean svg{width:13px;height:13px;display:block}
   .running .bean{animation:beat 1s steps(1,end) infinite}
   @keyframes beat{0%,70%{opacity:1;transform:scale(1.15)}71%,100%{opacity:.28;transform:scale(1)}}
 
@@ -116,6 +120,8 @@
     color:var(--ink);transition:opacity .3s ease;max-width:100%;
   }
   .amount .cur{font-size:.3em;font-weight:600;color:var(--accent);margin-right:.12em;letter-spacing:0;transform:translateY(-.34em)}
+  .amount .cur.coin{display:inline-flex;align-items:center;transform:translateY(-.04em);margin-right:.12em}
+  .amount .cur.coin svg{width:1.4em;height:1.4em;display:block}
   .amount .dec{display:inline-flex;align-items:baseline;font-size:.44em;font-weight:600;letter-spacing:-.02em;color:var(--ink-2);margin-left:.04em}
   .amount .micro{font-size:.42em;color:var(--accent);font-variant-numeric:tabular-nums;margin-left:.02em}
   .idle .amount{opacity:.55}
@@ -485,28 +491,44 @@
   var ICON_SVG = '<svg viewBox="0 0 512 512" width="26" height="26" aria-hidden="true"><circle cx="246" cy="274" r="138" fill="#F05E33"/><circle cx="246" cy="274" r="117" fill="none" stroke="#8F3010" stroke-opacity="0.22" stroke-width="9"/><g transform="translate(246,280) scale(0.84) translate(-256,-268)" stroke="#FFF9F0" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M198 200 L256 254 L314 200"/><path d="M256 252 L256 336"/><path d="M208 276 H304"/><path d="M208 308 H304"/></g><circle cx="358" cy="160" r="24" fill="#F05E33"/><circle cx="398" cy="126" r="13" fill="#F05E33" opacity="0.42"/><circle cx="428" cy="100" r="7" fill="#F05E33" opacity="0.22"/></svg>';
 
   var TEMPLATES = {
-    worker: { name: '打工人', desc: '咖啡、面、外套', aside: '碗牛肉面', asideUnit: 1,
+    worker: { name: '打工人', desc: '咖啡、面、外套', aside: '碗牛肉面', asideUnit: 1, verb: '辛苦了',
       run: '钱在走，别停太久', pause: '刚才那杯咖啡喝完了吗',
       items: [{v:15,m:'☕',n:'一杯冰美式'},{v:28,m:'🍜',n:'一碗牛肉面'},{v:38,m:'🧋',n:'一杯奶茶加料'},
               {v:68,m:'📖',n:'一本书'},{v:128,m:'🍽',n:'一顿好的'},{v:268,m:'👟',n:'一双帆布鞋'},
               {v:688,m:'🧥',n:'一件外套'},{v:1288,m:'🏠',n:'一天房租'}] },
-    travel: { name: '旅行爱好者', desc: '车票、青旅、机票', aside: '张地铁票', asideUnit: 0,
+    travel: { name: '旅行爱好者', desc: '车票、青旅、机票', aside: '杯机场咖啡', asideUnit: 1, verb: '走了',
       run: '钱在走，下一站更近一点', pause: '在哪个城市发呆？',
       items: [{v:8,m:'🎫',n:'一张地铁票'},{v:38,m:'☕',n:'一杯机场咖啡'},{v:128,m:'🛏',n:'一晚青旅'},
               {v:268,m:'🚗',n:'一天租车'},{v:388,m:'🎟',n:'一张景区门票'},{v:688,m:'🏝',n:'一晚海景房'},
               {v:1288,m:'✈️',n:'一张短途机票'},{v:1888,m:'🎒',n:'一次周末旅行'}] },
-    home: { name: '居家博主', desc: '香薰、花、咖啡机', aside: '束花', asideUnit: 2,
+    home: { name: '居家博主', desc: '香薰、花、咖啡机', aside: '束花', asideUnit: 2, verb: '折腾了',
       run: '今天也在把家变好看', pause: '去浇一下那盆绿植',
       items: [{v:58,m:'🕯',n:'一支香薰'},{v:88,m:'☕',n:'一只马克杯'},{v:128,m:'💐',n:'一束花'},
               {v:268,m:'🍳',n:'一口铸铁锅'},{v:488,m:'🛏',n:'一套亚麻四件套'},{v:1288,m:'⚙️',n:'一台半自动咖啡机'},
               {v:1888,m:'🪑',n:'一把好椅子'},{v:2688,m:'🏠',n:'一次全屋收纳'}] },
-    gamer: { name: '游戏玩家', desc: '十连、手柄、显示器', aside: '次十连', asideUnit: 0,
+    gamer: { name: '游戏玩家', desc: '十连、手柄、显示器', aside: '次十连', asideUnit: 0, verb: '肝了',
       run: '再刷一把就下班', pause: '先存档，再歇会儿',
       items: [{v:68,m:'🎮',n:'一次十连'},{v:128,m:'🎧',n:'一个皮肤包'},{v:388,m:'🕹',n:'一个手柄'},
               {v:888,m:'💺',n:'一把电竞椅'},{v:1288,m:'🖥',n:'一块显示器'},{v:1888,m:'🎧',n:'一副好耳机'},
               {v:2688,m:'🎮',n:'一台掌机'},{v:3988,m:'🏆',n:'一套顶配外设'}] }
   };
   var TPL_ORDER = ['worker', 'travel', 'home', 'gamer'];
+
+  function mountLogo() {
+    var brand = document.querySelector('.brand');
+    if (brand && !brand.querySelector('svg')) brand.insertAdjacentHTML('afterbegin', ICON_SVG.replace('width="26" height="26"', 'width="22" height="22"'));
+    var cur = document.querySelector('.amount .cur');
+    if (cur && !cur.querySelector('svg')) {
+      cur.classList.add('coin');
+      cur.innerHTML = ICON_SVG.replace('width="26" height="26"', 'width="40" height="40"');
+    }
+    var first = document.querySelector('.sheet.first h2') || document.querySelector('.first h2');
+    if (first && !document.querySelector('.firstmark')) {
+      first.insertAdjacentHTML('beforebegin', '<div class="firstmark" aria-hidden="true">' + ICON_SVG + '</div>');
+    }
+  }
+
+  var QUIPS = {"worker": {"zero": ["今天还没开张，一分钱都还没挣。", "椅子还没坐热，先别急。", "钱包今天很安静。"], "sub": ["才刚开头，别急。", "离房租还早着呢。", "先攒够今天这顿。"], "early": ["加个蛋还得犹豫一下。", "点单之前还是看了一眼余额。", "吃面不敢要小菜。"], "mid": ["够吃几顿好的，就是都舍不得。", "数字涨了，房租还是很远。", "够今天，不够月底。"], "good": ["房租还差一截，先别想。", "数字看着不错，钱包还是薄。", "离那个大件近了，但还没到。"], "near": ["快够一天房租了，交完就没了。", "熬到这会儿，房租也才刚够。", "再往上就是别人的房租了。"], "sim": ["梦里什么都有。", "反正是模拟的，随便点。"]}, "travel": {"zero": ["还没开张，连地铁都坐不起。", "行李箱还锁着。", "地图打开又关上了。"], "sub": ["才刚进站，路还长。", "离机票还早。", "先攒够路上的一杯咖啡。"], "early": ["单程票先能进站，回程再想。", "青旅上铺的钱还没攒够。", "只够走，不够住。"], "mid": ["够一张门票，年假不够。", "住一晚可以，吃饭另算。", "出去一趟，回来要缓半个月。"], "good": ["机票有了，请假还没批。", "行李额还得另外算。", "攒得动路费，攒不动假期。"], "near": ["快够一次周末旅行了，年假呢。", "钱快够了，人还没放假。", "路线都规划好了，就是走不了。"], "sim": ["梦里环游世界。", "这一轮够飞一趟，不用请假。"]}, "home": {"zero": ["还没开张，花还没买。", "家里还是老样子。", "购物车先放着。"], "sub": ["才刚开头，慢慢添。", "家里还是老样子。", "购物车先放着。"], "early": ["花有了，花瓶还是旧的。", "先买最小的那件，慢慢来。", "好看的都贵，先挑便宜的。"], "mid": ["锅有了，厨房还是租的。", "好看的东西不敢买，怕搬家。", "墙上想钉个钉子都得问一声。"], "good": ["四件套攒到了，房子不是自己的。", "想换的椅子，房东说别动墙。", "越收拾越舍不得搬。"], "near": ["快够全屋收纳了，收拾的还是别人的家。", "东西都买得起，就是搬不走。", "攒到这一步，还是在租房。"], "sim": ["梦里有个自己的房子。", "这一轮够装修一遍了。"]}, "gamer": {"zero": ["还没开张，卡池先别开。", "体力满了，钱包空的。", "先看会儿别人的战绩。"], "sub": ["才刚开头，卡池先别急。", "离保底还早。", "先看会儿别人的战绩。"], "early": ["抽了一次，全是碎片。", "皮肤到手，角色还没有。", "保底还差得远。"], "mid": ["够买手柄，游戏还没通。", "队友还是那几个。", "买得起皮肤，买不起时间。"], "good": ["显示器快够了，桌子放不下。", "配置上来了，手速没上来。", "越氪越菜，是这个道理。"], "near": ["快满配了，可惜没时间玩。", "全都配齐了，也没人一起玩。", "肝到这一步，段位还在原地。"], "sim": ["梦里已经满配。", "这一轮够氪一单了。"]}};
 
   var S = {
     v: 2,
@@ -591,20 +613,30 @@
     return h + ' 小时' + (mm ? ' ' + mm + ' 分' : '');
   }
 
+  var lastAside = '', quipAt = 0, quipI = new Date().getDate() % 3;
+  function pickQuip(arr, now) {
+    if (!arr || !arr.length) return '';
+    if (now > quipAt) { quipAt = now + 24000; quipI++; }
+    return arr[quipI % arr.length];
+  }
+
   function asideSentence(e, now, isSim) {
     var T = tpl(), unit = T.items[T.asideUnit].v;
     var c = e / unit, n = c >= 10 ? Math.round(c) : Math.floor(c);
     var dw = durWords(liveWorkMs(now));
-    function two(main, quip) { return main + (quip ? '<span class="quip">' + quip + '</span>' : ''); }
-
-    if (isSim) return two('这一轮跑了 ' + dw + '，够 <b>' + n + '</b> ' + T.aside + '。', '梦里什么都有。');
-    if (c < 0.25) return two('辛苦了 ' + dw + '，连一' + T.aside + '都还没够。', '再等等，快了。');
-    if (c < 1) return two('辛苦了 ' + dw + '，还差 <b>¥' + fen(unit - e) + '</b> 才够一' + T.aside + '。', '就差这么一点。');
-
-    var lead = n <= 1 ? '总算' : n <= 3 ? '勉强' : '';
-    var quip = n <= 1 ? '也算没白干。' : n <= 3 ? '加个蛋还得犹豫一下。' : n <= 9 ? '就是都不太舍得吃。' : '就是没一碗是给自己的。';
-    var num = n === 1 ? '一' : '<b>' + n + '</b> ';
-    return two('辛苦了 ' + dw + '，' + lead + '够' + (n === 1 ? '' : ' ') + num + T.aside + '。', quip);
+    var Q = QUIPS[S.template] || QUIPS.worker;
+    var verb = T.verb || '辛苦了';
+    var top = T.items[T.items.length - 1].v, ratio = e / top;
+    var bucket = isSim ? 'sim' : ratio < 0.05 ? 'sub' : ratio < 0.15 ? 'early' : ratio < 0.35 ? 'mid' : ratio < 0.65 ? 'good' : 'near';
+    var quip = pickQuip(Q[bucket] || Q.n1, now);
+    var main;
+    if (isSim) main = verb + ' ' + dw + '，够 <b>' + n + '</b> ' + T.aside;
+    else if (c < 0.25) main = verb + ' ' + dw + '，连一' + T.aside + '都还没够';
+    else if (c < 1) main = verb + ' ' + dw + '，还差 <b>¥' + fen(unit - e) + '</b> 才够一' + T.aside;
+    else if (n <= 1) main = verb + ' ' + dw + '，总算够一' + T.aside;
+    else if (n <= 3) main = verb + ' ' + dw + '，勉强够 <b>' + n + '</b> ' + T.aside;
+    else main = verb + ' ' + dw + '，够 <b>' + n + '</b> ' + T.aside;
+    return main + '。<span class="quip">' + quip + '</span>';
   }
 
   function liveWorkMs(now) {
@@ -710,12 +742,15 @@
     }
     el.btnMain.classList.toggle('ghost', running && !isSim);
 
-    if (S.hideMoney) {
-      el.aside.textContent = e > 0 ? '数字藏起来了，辛苦一点没少。' : '';
-    } else if (e > 0) {
-      el.aside.innerHTML = asideSentence(e, now, isSim);
-    } else if (isSim) el.aside.innerHTML = '';
-    else el.aside.textContent = running ? '刚坐下，钱才刚开始动。' : '今天还没开张，一分钱都还没挣。';
+    var asideHTML;
+    if (S.hideMoney) asideHTML = e > 0 ? '数字藏起来了，辛苦一点没少。' : '';
+    else if (e > 0) asideHTML = asideSentence(e, now, isSim);
+    else if (isSim) asideHTML = '';
+    else asideHTML = pickQuip((QUIPS[S.template] || QUIPS.worker).zero, now);
+    if (asideHTML !== lastAside) {
+      lastAside = asideHTML;
+      if (asideHTML) el.aside.innerHTML = asideHTML; else el.aside.textContent = '';
+    }
 
     if (!celebrating) { if (isSim) renderSimGoal(now); else renderItemGoal(now, e); }
     renderTimeline(now);
@@ -1174,7 +1209,7 @@
     return '<!DOCTYPE html>\n<html lang="zh-CN"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<title>我的每秒</title><style>' + SHARE_CSS + '</style></head><body><div class="card">' +
-      '<div class="top"><span class="brand">每秒</span><span class="date">' + dateStr + '</span></div>' +
+      '<div class="top"><span class="brand">' + ICON_SVG.replace('width="26" height="26"', 'width="20" height="20"') + '每秒</span><span class="date">' + dateStr + '</span></div>' +
       bodyHtml +
       '<footer><div class="cta">把你自己的一秒也变成钱</div>' +
       '<a class="url" href="' + SHARE_URL + '">' + SHARE_URL.replace(/^https:\/\//, '') + '</a>' +
@@ -1341,6 +1376,7 @@
   window.addEventListener('pagehide', function () { save(); });
 
   /* ---------- 启动 ---------- */
+  mountLogo();
   load(); paintDate(); applyTheme();
   lastTier = tiersReached(moneyNow(Date.now()));
   lastSimYear = S.sim.on ? Math.floor(liveWorkMs(Date.now()) / Math.max(1, yearMs())) : -1;
