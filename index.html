@@ -281,6 +281,11 @@
   .stat-head{display:flex;align-items:baseline;gap:9px;margin:2px 0 4px}
   .stat-head .big{font-size:28px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
   .stat-head .sub{font-size:11.5px;color:var(--ink-3)}
+  .stat-group{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 2px;
+              padding-top:12px;border-top:1px solid var(--rule-soft);
+              font-size:10.5px;letter-spacing:.16em;color:var(--ink-3)}
+  .stat-group:first-child{margin-top:4px;padding-top:0;border-top:0}
+  .stat-group span:last-child{letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .stat-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--rule-soft);font-size:14px}
   .stat-row:last-child{border-bottom:0}
   .stat-row .idx{font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;width:16px;letter-spacing:.04em}
@@ -524,16 +529,16 @@
   var TEMPLATES = {
     worker: { name: '打工人', desc: '咖啡、面、外套', aside: '碗牛肉面', asideUnit: 1, verb: '辛苦了',
       run: '钱在走，别停太久', pause: '刚才那杯咖啡喝完了吗',
-      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🥟", "n": "一个肉包"}, {"v": 15, "m": "☕", "n": "一杯冰美式"}, {"v": 28, "m": "🍜", "n": "一碗牛肉面"}, {"v": 38, "m": "🧋", "n": "一杯奶茶加料"}, {"v": 68, "m": "📖", "n": "一本书"}, {"v": 88, "m": "🍱", "n": "一份加餐外卖"}, {"v": 128, "m": "🍽", "n": "一顿好的"}, {"v": 268, "m": "👟", "n": "一双帆布鞋"}, {"v": 388, "m": "🎧", "n": "一副耳机"}, {"v": 688, "m": "🧥", "n": "一件外套"}, {"v": 1288, "m": "🏠", "n": "一天房租"}, {"v": 1888, "m": "⌚", "n": "一块手表"}, {"v": 3800, "m": "📱", "n": "一部新手机"}, {"v": 6800, "m": "💻", "n": "一台笔电"}, {"v": 12800, "m": "📷", "n": "一台相机"}, {"v": 25000, "m": "🛋", "n": "一套客厅家具"}], items: [] },
+      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🥟", "n": "一个肉包"}, {"v": 15, "m": "☕", "n": "一杯冰美式"}, {"v": 28, "m": "🍜", "n": "一碗牛肉面"}, {"v": 38, "m": "🧋", "n": "一杯奶茶加料"}, {"v": 68, "m": "📖", "n": "一本书"}, {"v": 88, "m": "🍱", "n": "一份加餐外卖"}, {"v": 128, "m": "🍽", "n": "一顿好的"}, {"v": 268, "m": "👟", "n": "一双帆布鞋"}, {"v": 388, "m": "🎧", "n": "一副耳机"}, {"v": 688, "m": "🧥", "n": "一件外套"}, {"v": 1288, "m": "🏠", "n": "一天房租"}, {"v": 1888, "m": "⌚", "n": "一块手表"}, {"v": 3800, "m": "📱", "n": "一部新手机"}, {"v": 6800, "m": "💻", "n": "一台笔电"}, {"v": 12800, "m": "📷", "n": "一台相机"}, {"v": 26000, "m": "🗾", "n": "一次日本旅行"}, {"v": 60000, "m": "📦", "n": "一次搬家换家具"}, {"v": 150000, "m": "🚗", "n": "一辆二手代步车"}, {"v": 300000, "m": "🔨", "n": "一次正经装修"}, {"v": 700000, "m": "🚘", "n": "一辆好车"}, {"v": 2000000, "m": "🏡", "n": "一套小房子首付"}, {"v": 6000000, "m": "🏘", "n": "一套房子"}, {"v": 12000000, "m": "🏛", "n": "一套大一点的房子"}], items: [] },
     travel: { name: '旅行爱好者', desc: '车票、青旅、机票', aside: '杯机场咖啡', asideUnit: 1, verb: '走了',
       run: '钱在走，下一站更近一点', pause: '在哪个城市发呆？',
-      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🎫", "n": "一张地铁票"}, {"v": 38, "m": "☕", "n": "一杯机场咖啡"}, {"v": 68, "m": "🍜", "n": "一碗机场面"}, {"v": 128, "m": "🛏", "n": "一晚青旅"}, {"v": 268, "m": "🚗", "n": "一天租车"}, {"v": 388, "m": "🎟", "n": "一张景区门票"}, {"v": 688, "m": "🏝", "n": "一晚海景房"}, {"v": 1288, "m": "✈️", "n": "一张短途机票"}, {"v": 1888, "m": "🎒", "n": "一次周末旅行"}, {"v": 2600, "m": "🧳", "n": "一个登机箱"}, {"v": 3800, "m": "🏨", "n": "一晚五星酒店"}, {"v": 5200, "m": "📷", "n": "一台运动相机"}, {"v": 8800, "m": "🚄", "n": "一次跨省往返"}, {"v": 12000, "m": "🌏", "n": "一张欧洲往返机票"}, {"v": 26000, "m": "🗺", "n": "一次十天旅行"}], items: [] },
+      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🎫", "n": "一张地铁票"}, {"v": 38, "m": "☕", "n": "一杯机场咖啡"}, {"v": 68, "m": "🍜", "n": "一碗机场面"}, {"v": 128, "m": "🛏", "n": "一晚青旅"}, {"v": 268, "m": "🚗", "n": "一天租车"}, {"v": 388, "m": "🎟", "n": "一张景区门票"}, {"v": 688, "m": "🏝", "n": "一晚海景房"}, {"v": 1288, "m": "✈️", "n": "一张短途机票"}, {"v": 1888, "m": "🎒", "n": "一次周末旅行"}, {"v": 2600, "m": "🧳", "n": "一个登机箱"}, {"v": 3800, "m": "🏨", "n": "一晚五星酒店"}, {"v": 5200, "m": "📷", "n": "一台运动相机"}, {"v": 9000, "m": "🤿", "n": "一次海岛潜水"}, {"v": 12800, "m": "🌏", "n": "一张欧洲往返机票"}, {"v": 26000, "m": "🗺", "n": "一次十天旅行"}, {"v": 60000, "m": "🚐", "n": "一次房车自驾"}, {"v": 150000, "m": "🧊", "n": "一次南极"}, {"v": 300000, "m": "🌍", "n": "一次环球旅行"}, {"v": 700000, "m": "🚌", "n": "一辆房车"}, {"v": 2000000, "m": "🏝", "n": "一间海边小屋首付"}, {"v": 6000000, "m": "🏖", "n": "一套度假屋"}, {"v": 12000000, "m": "🌅", "n": "一栋海边小楼"}], items: [] },
     home: { name: '居家博主', desc: '香薰、花、咖啡机', aside: '束花', asideUnit: 2, verb: '折腾了',
       run: '今天也在把家变好看', pause: '去浇一下那盆绿植',
-      catalog: [{"v": 3, "m": "🧽", "n": "一块抹布"}, {"v": 12, "m": "🧴", "n": "一瓶洗洁精"}, {"v": 58, "m": "🕯", "n": "一支香薰"}, {"v": 88, "m": "☕", "n": "一只马克杯"}, {"v": 128, "m": "💐", "n": "一束花"}, {"v": 268, "m": "🍳", "n": "一口铸铁锅"}, {"v": 488, "m": "🛏", "n": "一套亚麻四件套"}, {"v": 688, "m": "💡", "n": "一盏落地灯"}, {"v": 1288, "m": "⚙️", "n": "一台半自动咖啡机"}, {"v": 1888, "m": "🪑", "n": "一把好椅子"}, {"v": 2688, "m": "🧹", "n": "一次全屋收纳"}, {"v": 3200, "m": "🤖", "n": "一台扫地机器人"}, {"v": 5800, "m": "🍽", "n": "一台洗碗机"}, {"v": 8800, "m": "📺", "n": "一台大屏电视"}, {"v": 13000, "m": "🛋", "n": "一张真皮沙发"}, {"v": 28000, "m": "🏠", "n": "一次全屋软装"}], items: [] },
+      catalog: [{"v": 3, "m": "🧽", "n": "一块抹布"}, {"v": 12, "m": "🧴", "n": "一瓶洗洁精"}, {"v": 58, "m": "🕯", "n": "一支香薰"}, {"v": 88, "m": "☕", "n": "一只马克杯"}, {"v": 128, "m": "💐", "n": "一束花"}, {"v": 268, "m": "🍳", "n": "一口铸铁锅"}, {"v": 488, "m": "🛏", "n": "一套亚麻四件套"}, {"v": 688, "m": "💡", "n": "一盏落地灯"}, {"v": 1288, "m": "⚙️", "n": "一台半自动咖啡机"}, {"v": 1888, "m": "🪑", "n": "一把好椅子"}, {"v": 2688, "m": "🧹", "n": "一次全屋收纳"}, {"v": 3200, "m": "🤖", "n": "一台扫地机器人"}, {"v": 5800, "m": "🍽", "n": "一台洗碗机"}, {"v": 8800, "m": "📺", "n": "一台大屏电视"}, {"v": 13000, "m": "🛋", "n": "一张真皮沙发"}, {"v": 28000, "m": "🧊", "n": "一套冰箱洗衣机"}, {"v": 60000, "m": "🔧", "n": "一次厨房改造"}, {"v": 150000, "m": "🛠", "n": "一次全屋翻新"}, {"v": 300000, "m": "🔨", "n": "一次正经装修"}, {"v": 700000, "m": "🏚", "n": "一次老房改造"}, {"v": 2000000, "m": "🏡", "n": "一套小房子首付"}, {"v": 6000000, "m": "🏘", "n": "一套带院子的房子"}, {"v": 12000000, "m": "🏛", "n": "一套大房子"}], items: [] },
     gamer: { name: '游戏玩家', desc: '十连、手柄、显示器', aside: '次十连', asideUnit: 0, verb: '肝了',
       run: '再刷一把就下班', pause: '先存档，再歇会儿',
-      catalog: [{"v": 30, "m": "🎫", "n": "一个月会员"}, {"v": 68, "m": "🎮", "n": "一次十连"}, {"v": 128, "m": "🎧", "n": "一个皮肤包"}, {"v": 388, "m": "🕹", "n": "一个手柄"}, {"v": 888, "m": "💺", "n": "一把电竞椅"}, {"v": 1288, "m": "🖥", "n": "一块显示器"}, {"v": 1888, "m": "🎧", "n": "一副好耳机"}, {"v": 2688, "m": "🎮", "n": "一台掌机"}, {"v": 3988, "m": "⌨️", "n": "一套顶配外设"}, {"v": 5200, "m": "🎴", "n": "一块显卡"}, {"v": 6800, "m": "🖥", "n": "一台大屏显示器"}, {"v": 9000, "m": "📦", "n": "一台主机"}, {"v": 12000, "m": "💻", "n": "一台游戏本"}, {"v": 18000, "m": "🪑", "n": "一套电竞房桌椅"}, {"v": 26000, "m": "🏆", "n": "一套顶配全家桶"}], items: [] }
+      catalog: [{"v": 30, "m": "🎫", "n": "一个月会员"}, {"v": 68, "m": "🎮", "n": "一次十连"}, {"v": 128, "m": "🎧", "n": "一个皮肤包"}, {"v": 388, "m": "🕹", "n": "一个手柄"}, {"v": 888, "m": "💺", "n": "一把电竞椅"}, {"v": 1288, "m": "🖥", "n": "一块显示器"}, {"v": 1888, "m": "🎧", "n": "一副好耳机"}, {"v": 2688, "m": "🎮", "n": "一台掌机"}, {"v": 3988, "m": "⌨️", "n": "一套顶配外设"}, {"v": 5200, "m": "🎴", "n": "一块显卡"}, {"v": 6800, "m": "🖥", "n": "一台大屏显示器"}, {"v": 9000, "m": "📦", "n": "一台主机"}, {"v": 12000, "m": "💻", "n": "一台游戏本"}, {"v": 18000, "m": "🪑", "n": "一套电竞房桌椅"}, {"v": 26000, "m": "🏟", "n": "一次线下观赛之旅"}, {"v": 60000, "m": "🕹", "n": "一间自己的电竞房"}, {"v": 150000, "m": "🚗", "n": "一辆二手性能车"}, {"v": 300000, "m": "🚘", "n": "一辆能漂移的车"}, {"v": 700000, "m": "🚙", "n": "一辆新车"}, {"v": 2000000, "m": "🏡", "n": "一套小房子首付"}, {"v": 6000000, "m": "🏠", "n": "一套带地下室的房子"}, {"v": 12000000, "m": "🏛", "n": "一套带影音室的房子"}], items: [] }
   };
   var TPL_ORDER = ['worker', 'travel', 'home', 'gamer'];
 
@@ -583,8 +588,10 @@
   function num(v) { return Number(v) || 0; }
   function tpl() { return TEMPLATES[S.template] || TEMPLATES.worker; }
 
-  // 阶梯的时间刻度（占一天工资的比例）：5 分钟 → 1.15 天
-  var SLOTS = [0.0104, 0.03, 0.06, 0.12, 0.22, 0.38, 0.62, 1.15];
+  // 阶梯的 17 个时间刻度（占一天工资的比例）：5 分钟 → 5 年
+  var SLOTS = [5 / 480, 15 / 480, 30 / 480, 60 / 480, 120 / 480, 240 / 480, 360 / 480,
+               1, 2, 5, 10, 21.75, 65, 130.5, 261, 522, 1305];
+  var GROUPS = [{ k: '今天', from: 0, to: 8 }, { k: '这阵子', from: 8, to: 13 }, { k: '往后', from: 13, to: 17 }];
   function reflowLadders() {
     var day = S.salary / Math.max(1, S.workdays);
     TPL_ORDER.forEach(function (k) {
@@ -600,7 +607,6 @@
           var d = Math.abs(Math.log(it.v / Math.max(0.5, target)));
           if (d < bestD) { bestD = d; best = j; }
         }
-        if (best < 0) { for (var q = cat.length - 1; q >= 0; q--) { if (!used[cat[q].n]) { best = q; break; } } }
         if (best < 0) break;
         used[cat[best].n] = 1; out.push(cat[best]); floorV = cat[best].v;
       }
@@ -656,12 +662,53 @@
   function yearMs() { return 12 * S.workdays * dayMs(); }
   function simTotalMs() { return S.sim.years * yearMs(); }
   function durWords(ms) {
-    var m = Math.floor(ms / 60000);
-    if (m < 1) return '一小会儿';
-    if (m < 60) return m + ' 分钟';
-    var h = Math.floor(m / 60), mm = m % 60;
-    return h + ' 小时' + (mm ? ' ' + mm + ' 分' : '');
+    var mins = ms / 60000;
+    if (mins < 1) return '一小会儿';
+    if (mins < 60) return Math.floor(mins) + ' 分钟';
+    var ph = Math.max(1, S.hours || 8);        // 一天算几小时
+    var h = mins / 60;
+    if (h < ph) { var hh = Math.floor(h), mm = Math.round((h - hh) * 60); return hh + ' 小时' + (mm ? ' ' + mm + ' 分' : ''); }
+    var d = h / ph;                            // 折成工作日
+    if (d < 5) { var dd = Math.floor(d), rh = Math.round((d - dd) * ph); return dd + ' 天' + (rh ? ' ' + rh + ' 小时' : ''); }
+    if (d < 21.75) { var w = Math.floor(d / 5), rd = Math.round(d - w * 5); return w + ' 周' + (rd ? ' ' + rd + ' 天' : ''); }
+    if (d < 261) {
+      var mo = Math.floor(d / 21.75), rw = Math.floor((d - mo * 21.75) / 5);
+      if (rw >= 4) { mo++; rw = 0; }
+      return mo + ' 个月' + (rw ? ' ' + rw + ' 周' : '');
+    }
+    var y = Math.floor(d / 261), ry = Math.floor((d % 261) / 21.75);
+    return y + ' 年' + (ry ? ' ' + ry + ' 个月' : '');
   }
+  function waitWords(sec) {
+    if (sec < 60) return Math.ceil(sec) + ' 秒';
+    if (sec < 3600) return Math.ceil(sec / 60) + ' 分钟';
+    if (sec < 86400) return (sec / 3600).toFixed(1) + ' 小时';
+    var d = sec / 86400;
+    if (d < 30) return d.toFixed(1) + ' 天';
+    if (d < 365) return (d / 30).toFixed(0) + ' 个月';
+    return (d / 365).toFixed(1) + ' 年';
+  }
+
+  // 长线吐槽（月/年尺度）
+  var LONGQ = {
+    worker: { week: ['几天就这么过去了。', '换得挺快，人还没缓过来。', '时间都是按小时卖的。'],
+               month: ['这个月就这么过去了。', '东西换了，日子没换。', '账面上挺好，人有点累。'],
+               year: ['这么久了，东西是换了。', '换了一堆东西，人还是那个人。', '钱变成东西，比变成存款快。'] },
+    travel: { week: ['几天就走了这么远。', '机票钱是这么攒出来的。', '换得快，人还没出发。'],
+               month: ['这个月都在路上想。', '风景还没看到，钱先到了。', '攒着攒着，假还没请。'],
+               year: ['这么久，够走很远了吧。', '钱攒成了票，人还坐着。', '走了这么多年，还是先看机票。'] },
+    home:   { week: ['几天就添了一件。', '家里慢慢有点样子了。', '折腾得挺快。'],
+               month: ['这个月家里添了不少。', '地方还是那个地方。', '收拾来收拾去，还是租的。'],
+               year: ['这么久了，家里应该挺像样。', '东西越添越多，房子不是自己的。', '家是收拾出来的，也是租的。'] },
+    gamer:  { week: ['几天就肝出这么多。', '进度条动了，人没动。', '肝得挺快，手还是慢。'],
+               month: ['这个月肝了不少。', '装备是齐了，人还是菜。', '充值记录比战绩好看。'],
+               year: ['这么久了，应该能打了吧。', '装备一堆，段位没动。', '肝出来的都是别人的游戏。'] }
+  };
+
+  Object.keys(LONGQ).forEach(function (k) {
+    if (!QUIPS[k]) QUIPS[k] = {};
+    QUIPS[k].month = LONGQ[k].month; QUIPS[k].year = LONGQ[k].year;
+  });
 
   var lastAside = '', quipAt = 0, quipI = new Date().getDate() % 3;
   function pickQuip(arr, now) {
@@ -677,21 +724,32 @@
   }
   function cnNum(n) { return ['零', '一', '两', '三', '四', '五'][n] || String(n); }
 
+  var LONG_VERB = { worker: '熬了', travel: '走了', home: '折腾了', gamer: '肝了' };
   function asideSentence(e, now, isSim) {
-    var T = tpl(), items = T.items;
-    var dw = durWords(liveWorkMs(now));
-    var verb = T.verb || '辛苦了';
+    var T = tpl(), items = T.items, ms = liveWorkMs(now);
+    var dw = durWords(ms);
+    var verb = (ms / 60000 / 60) >= 2 * Math.max(1, S.hours || 8) ? (LONG_VERB[S.template] || '熬了') : (T.verb || '辛苦了');
     var Q = QUIPS[S.template] || QUIPS.worker;
-    var top = items[items.length - 1].v, ratio = e / top;
-    var bucket = isSim ? 'sim' : ratio < 0.05 ? 'sub' : ratio < 0.15 ? 'early' : ratio < 0.35 ? 'mid' : ratio < 0.65 ? 'good' : 'near';
-    var quip = pickQuip(Q[bucket] || Q.mid, now);
 
     var idx = -1;
     for (var i = 0; i < items.length; i++) if (e >= items[i].v) idx = i;
 
-    var main;
-    if (isSim) main = verb + ' ' + dw + '，换来' + items[Math.max(0, idx)].n;
-    else if (idx < 0) main = verb + ' ' + dw + '，还差 <b>¥' + fen(items[0].v - e) + '</b> 才够' + items[0].n;
+    var wd = ms / 60000 / 60 / Math.max(1, S.hours || 8);   // 工作日
+    var bucket;
+    if (wd >= 65) bucket = 'year';
+    else if (wd >= 5) bucket = 'month';
+    else if (wd >= 1) bucket = 'week';
+    else if (idx < 0) bucket = 'sub';
+    else if (idx <= 1) bucket = 'early';
+    else if (idx <= 4) bucket = 'mid';
+    else bucket = 'good';
+    var quip = pickQuip(Q[bucket] || Q.mid || Q.good, now);
+
+    var main, all = 0;
+    for (var q = 0; q < items.length; q++) all += items[q].v;
+
+    if (idx < 0) main = verb + ' ' + dw + '，还差 <b>¥' + fen(items[0].v - e) + '</b> 才够' + items[0].n;
+    else if (e >= all) main = verb + ' ' + dw + '，把整条阶梯换了一遍';
     else {
       main = verb + ' ' + dw + '，换来' + items[idx].n;
       var left = e - items[idx].v;
@@ -844,7 +902,7 @@
     var r = ratePerSecond();
     if (r > 0 && !S.hideMoney) {
       var sec = left / r;
-      el.goalEta.textContent = sec < 60 ? '再等 ' + Math.ceil(sec) + ' 秒' : sec < 3600 ? '再等 ' + Math.ceil(sec / 60) + ' 分钟' : '再等 ' + (sec / 3600).toFixed(1) + ' 小时';
+      el.goalEta.textContent = '再等 ' + waitWords(sec);
     } else el.goalEta.textContent = '';
 
     var reached = tiersReached(e);
@@ -925,7 +983,9 @@
     celebrating = true;
     el.goalName.innerHTML = '<span class="m">🏁</span>模拟结束 · ' + S.sim.years + ' 年';
     el.goalPrice.textContent = S.hideMoney ? '¥ ··' : ('¥' + cn(Math.round(S.sim.elapsedMs / 1000 * ratePerSecond())));
-    el.goalLeft.textContent = '按 ×' + S.sim.speed + ' 走完';
+    var simMoney = S.sim.elapsedMs / 1000 * ratePerSecond(), gotIt = tpl().items[0];
+    tpl().items.forEach(function (it) { if (simMoney >= it.v) gotIt = it; });
+    el.goalLeft.textContent = '换来' + gotIt.n + ' · ×' + S.sim.speed;
     el.goalEta.textContent = '';
     el.goalFill.style.transform = 'scaleX(1)';
     burst();
@@ -1214,7 +1274,8 @@
 
     el.statsSeg.style.display = isSim ? 'none' : 'grid';
     el.statsSub.textContent = (isSim ? '本轮模拟' : (statsRange === 'today' ? '今天' : '累计')) + ' · 按「' + tpl().name + '」的顺序，一件一件换';
-    el.statAmount.textContent = S.hideMoney ? '¥ ······' : ('¥' + m.toFixed(2));
+    el.statAmount.textContent = S.hideMoney ? '¥ ······' :
+      ('¥' + cn(Math.floor(m)) + '.' + String(Math.floor(m * 100) % 100).padStart(2, '0'));
 
     var lc = ladderCounts(m);
     var rows = tpl().items.map(function (it, i) { return { it: it, count: lc[i], idx: i + 1 }; });
@@ -1225,12 +1286,21 @@
       el.statList.innerHTML = '<div class="empty">' + (m <= 0 ? '还什么都没换来<br>让时间先走一会儿' : '差一点点，第一件马上到手') + '</div>';
       return;
     }
-    el.statList.innerHTML = rows.map(function (x) {
-      var v = S.hideMoney ? '·' : ('×' + x.count);
-      return '<div class="stat-row' + (x.count > 0 ? '' : ' zero') + '">' +
-        '<span class="idx">' + pad(x.idx) + '</span><span class="n">' + x.it.m + ' ' + x.it.n + '</span>' +
-        '<span class="v">' + v + '</span></div>';
-    }).join('');
+    var html = '';
+    GROUPS.forEach(function (g) {
+      var seg = tpl().items.slice(g.from, g.to);
+      if (!seg.length) return;
+      var got = 0;
+      for (var i = g.from; i < g.to && i < lc.length; i++) if (lc[i] > 0) got++;
+      html += '<div class="stat-group"><span>' + g.k + '</span><span>' + got + ' / ' + seg.length + '</span></div>';
+      seg.forEach(function (it, n) {
+        var i = g.from + n, c = lc[i] || 0;
+        html += '<div class="stat-row' + (c > 0 ? '' : ' zero') + '">' +
+          '<span class="idx">' + pad(i + 1) + '</span><span class="n">' + it.m + ' ' + it.n + '</span>' +
+          '<span class="v">' + (S.hideMoney ? '·' : '×' + c) + '</span></div>';
+      });
+    });
+    el.statList.innerHTML = html;
   }
 
   /* ---------- 分享（四档） ---------- */
