@@ -2,6 +2,11 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.5.5] - 2026-11-06
+
+### 变更
+- 分享卡页脚 SLOGAN 换成「你的一秒，值多少钱？」——问句接住上面那句自嘲，也把话递给看卡的人
+
 ## [1.5.4] - 2026-11-06
 
 ### 变更
