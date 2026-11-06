@@ -130,6 +130,7 @@
   .readout .right{text-align:right}
   .aside{margin-top:14px;font-size:13px;color:var(--ink-2);line-height:1.55;min-height:20px;letter-spacing:.01em}
   .aside b{font-weight:700;color:var(--accent)}
+  .aside .quip{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
 
   .timeline{margin-top:26px;color:var(--ink-3)}
   .timeline svg{display:block;width:100%;height:auto}
@@ -455,10 +456,10 @@
   <div class="field col" style="border-top:1px solid var(--rule-soft);margin-top:18px">
     <label>分享</label>
     <div class="picks share" id="sharePicks">
-      <button class="pick" data-share="line" aria-pressed="false"><strong>一句话</strong><span>只有一句今天够买什么</span></button>
+      <button class="pick" data-share="line" aria-pressed="false"><strong>一句话</strong><span>只有一句话，别的不露</span></button>
       <button class="pick" data-share="report" aria-pressed="true"><strong>战报</strong><span>攒到几档、几件，不露钱</span></button>
-      <button class="pick" data-share="bill" aria-pressed="false"><strong>账单</strong><span>含金额，无工时</span></button>
-      <button class="pick" data-share="rhythm" aria-pressed="false"><strong>节奏卡</strong><span>只有今天的时间块，不含钱</span></button>
+      <button class="pick" data-share="bill" aria-pressed="false"><strong>账单</strong><span>带钱，不带时间</span></button>
+      <button class="pick" data-share="rhythm" aria-pressed="false"><strong>节奏卡</strong><span>只让人看你在忙</span></button>
     </div>
     <p class="note" id="shareNote">默认「战报」：别人能看懂你的进度，但算不出你的工资。</p>
   </div>
@@ -582,6 +583,30 @@
   function dayMs() { return S.hours * 3600 * 1000; }
   function yearMs() { return 12 * S.workdays * dayMs(); }
   function simTotalMs() { return S.sim.years * yearMs(); }
+  function durWords(ms) {
+    var m = Math.floor(ms / 60000);
+    if (m < 1) return '一小会儿';
+    if (m < 60) return m + ' 分钟';
+    var h = Math.floor(m / 60), mm = m % 60;
+    return h + ' 小时' + (mm ? ' ' + mm + ' 分' : '');
+  }
+
+  function asideSentence(e, now, isSim) {
+    var T = tpl(), unit = T.items[T.asideUnit].v;
+    var c = e / unit, n = c >= 10 ? Math.round(c) : Math.floor(c);
+    var dw = durWords(liveWorkMs(now));
+    function two(main, quip) { return main + (quip ? '<span class="quip">' + quip + '</span>' : ''); }
+
+    if (isSim) return two('这一轮跑了 ' + dw + '，够 <b>' + n + '</b> ' + T.aside + '。', '梦里什么都有。');
+    if (c < 0.25) return two('辛苦了 ' + dw + '，连一' + T.aside + '都还没够。', '再等等，快了。');
+    if (c < 1) return two('辛苦了 ' + dw + '，还差 <b>¥' + fen(unit - e) + '</b> 才够一' + T.aside + '。', '就差这么一点。');
+
+    var lead = n <= 1 ? '总算' : n <= 3 ? '勉强' : '';
+    var quip = n <= 1 ? '也算没白干。' : n <= 3 ? '加个蛋还得犹豫一下。' : n <= 9 ? '就是都不太舍得吃。' : '就是没一碗是给自己的。';
+    var num = n === 1 ? '一' : '<b>' + n + '</b> ';
+    return two('辛苦了 ' + dw + '，' + lead + '够' + (n === 1 ? '' : ' ') + num + T.aside + '。', quip);
+  }
+
   function liveWorkMs(now) {
     if (S.sim.on) {
       var b = S.sim.elapsedMs;
@@ -686,14 +711,11 @@
     el.btnMain.classList.toggle('ghost', running && !isSim);
 
     if (S.hideMoney) {
-      el.aside.textContent = e > 0 ? '金额藏起来了，进度还在走' : '';
+      el.aside.textContent = e > 0 ? '数字藏起来了，辛苦一点没少。' : '';
     } else if (e > 0) {
-      var unit = tpl().items[tpl().asideUnit].v;
-      var c = e / unit;
-      el.aside.innerHTML = c < 1
-        ? '还差 <b>¥' + fen(unit - e) + '</b> 就够一' + tpl().aside
-        : (isSim ? '这一轮约等于 ' : '今天约等于 ') + '<b>' + (c >= 10 ? Math.round(c) : c.toFixed(1)) + '</b> ' + tpl().aside;
-    } else el.aside.innerHTML = '';
+      el.aside.innerHTML = asideSentence(e, now, isSim);
+    } else if (isSim) el.aside.innerHTML = '';
+    else el.aside.textContent = running ? '刚坐下，钱才刚开始动。' : '今天还没开张，一分钱都还没挣。';
 
     if (!celebrating) { if (isSim) renderSimGoal(now); else renderItemGoal(now, e); }
     renderTimeline(now);
@@ -777,7 +799,8 @@
     });
     var nx = clamp((now - base) / span, 0, 1) * W;
     svg += '<line x1="' + nx.toFixed(1) + '" y1="0" x2="' + nx.toFixed(1) + '" y2="12" stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>';
-    svg += '</svg><div class="cap"><span>8:00</span><span>今天</span><span>24:00</span></div>';
+    var capMid = all.length > 1 ? ('今天被切成 ' + all.length + ' 段') : '今天';
+    svg += '</svg><div class="cap"><span>8:00</span><span>' + capMid + '</span><span>24:00</span></div>';
     el.timeline.innerHTML = svg;
   }
 
@@ -1187,11 +1210,11 @@
       var blocks = rhythmBlocks();
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
-        '<h1>今天我走了 <b>' + blocks.count + '</b> 段</h1>' +
-        '<p class="sub">' + (blocks.longest ? '最长的一段 ' + blocks.longest + '，' : '') + '剩下的是留白。</p>' +
+        '<h1>今天被切成 <b>' + blocks.count + '</b> 段</h1>' +
+        '<p class="sub">' + (blocks.longest ? '最完整的一段 ' + blocks.longest + '，其余都是碎片。' : '还没凑出完整的一段。') + '</p>' +
         '<div style="margin-top:22px">' + blocks.svg + '</div>' +
         '<div class="stats"><div><span>时段</span><b>' + blocks.span + '</b></div>' +
-        '<div><span>段数</span><b>' + blocks.count + ' 段</b></div></div>' +
+        '<div><span>最长一段</span><b>' + (blocks.longest || '—') + '</b></div></div>' +
         '<p class="tiny" style="margin-top:16px">只显示时间结构，不含任何金额。</p>');
     }
 
