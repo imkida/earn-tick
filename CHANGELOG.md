@@ -2,6 +2,11 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.5.6] - 2026-11-06
+
+### 修复
+- 分享卡顶部品牌行：图标和「每秒」原本按基线排（图标偏下、字号 11px 偏小），改成 flex 垂直居中，字号 14px、图标 24px
+
 ## [1.5.5] - 2026-11-06
 
 ### 变更
