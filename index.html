@@ -242,6 +242,15 @@
   .pick strong{display:block;font-size:13px;font-weight:650}
   .pick span{display:block;font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.4}
   .picks.share{grid-template-columns:repeat(4,1fr);gap:6px}
+  .linkbtn{display:block;width:100%;margin-top:12px;padding:11px 12px;border-radius:12px;
+           border:1px dashed var(--rule);background:transparent;color:var(--ink-2);
+           font-size:12.5px;font-weight:600;letter-spacing:.01em;text-align:center}
+  .linkbtn i{display:block;margin-top:2px;font-style:normal;font-size:10.5px;font-weight:400;color:var(--ink-3)}
+  .linkbtn:active{transform:scale(.99);background:var(--tint)}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translateX(-50%);
+         z-index:60;background:rgba(25,20,16,.92);color:#FFF6EA;font-size:12.5px;padding:9px 15px;
+         border-radius:99px;box-shadow:0 10px 24px -12px rgba(0,0,0,.5);animation:fade .2s ease}
+  .toast[hidden]{display:none}
   .picks.share .pick{text-align:center;border-radius:12px;padding:10px 4px}
   .picks.share .pick strong{font-size:12.5px}
   .picks.share .pick span{display:none}
@@ -494,6 +503,7 @@
       <button class="pick" data-share="rhythm" aria-pressed="false"><strong>节奏卡</strong><span>只让人看你在忙</span></button>
     </div>
     <p class="note" id="shareNote">默认「战报」：别人能看懂你的进度，但算不出你的工资。</p>
+    <button class="linkbtn" id="btnShareApp">把「每秒」发给别人 <i>只发链接，不带你任何数据</i></button>
   </div>
 
   <div class="sheet-foot" style="padding-bottom:calc(env(safe-area-inset-bottom) + 10px)">
@@ -505,6 +515,7 @@
 </section>
 
 <canvas class="burst" id="burst"></canvas>
+  <div class="toast" id="toast" hidden></div>
 
   <div class="raise" id="raise" hidden>
     <div class="raise-card">
@@ -578,7 +589,7 @@
    'btnFirstSave','aside','setSalary','setWorkdays','setHours','btnSettingsDone','btnResetDay','btnResetAll','btnUndo','raise','raiseNum','raiseSub','raiseOk',
    'saveNote','tplPicks','timeSeg','simBox','simYears','speedPicks','themePicks','hideSeg','statsBar','statsTxt',
    'statsSeg','statAmount','statTiers','statList','statsSub','btnStatsClose','restoreBar','restoreTxt','btnResume',
-   'btnFresh','btnShare','shareNote','sharePicks','beacon','timeline'].forEach(function (id) { el[id] = document.getElementById(id); });
+   'btnFresh','btnShare','btnShareApp','toast','shareNote','sharePicks','beacon','timeline'].forEach(function (id) { el[id] = document.getElementById(id); });
 
   /* ---------- 工具 ---------- */
   function pad(n, w) { n = String(n); while (n.length < (w || 2)) n = '0' + n; return n; }
@@ -1386,14 +1397,14 @@
 
     if (shareMode === 'line') {
       var its = tpl().items, hi = -1;
-      for (var q = 0; q < its.length; q++) if (amt >= its[q].v) hi = q;
+      for (var q = 0; q < its.length; q++) if (todayM >= its[q].v) hi = q;
       var line = hi < 0
-        ? '今天还差 ¥' + fen(its[0].v - amt) + '，才够' + its[0].n
+        ? '今天还差 ¥' + fen(its[0].v - todayM) + '，才够' + its[0].n
         : '今天换来' + its[hi].n;
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
         '<h1>' + line + '</h1>' +
-        '<p class="sub">剩下的就不说了。想看自己的一秒值多少，去下面那个地址。</p>');
+        '<p class="sub">剩下的就不说了。想看自己的一秒值多少，点下面的地址。</p>');
     }
 
     if (shareMode === 'rhythm') {
@@ -1491,6 +1502,37 @@
   }
   function showShareNote(msg) { el.shareNote.textContent = msg; }
   el.btnShare.addEventListener('click', doShare);
+
+  var toastTimer = null;
+  function toast(msg) {
+    el.toast.textContent = msg; el.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.toast.hidden = true; }, 1900);
+  }
+  function shareApp() {
+    var text = '把工资换成每秒，看看今天换到了什么。';
+    if (navigator.share) {
+      navigator.share({ title: '每秒', text: text, url: SHARE_URL }).catch(function () { copyUrl(); });
+      return;
+    }
+    copyUrl();
+  }
+  function copyUrl() {
+    var done = function () { toast('链接已复制，发给谁都可以'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(SHARE_URL).then(done, function () { legacyCopy(); });
+      return;
+    }
+    legacyCopy();
+    function legacyCopy() {
+      var t = document.createElement('textarea');
+      t.value = SHARE_URL; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+      document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); done(); } catch (e) { toast(SHARE_URL); }
+      document.body.removeChild(t);
+    }
+  }
+  el.btnShareApp.addEventListener('click', shareApp);
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-share]'); if (!b) return;
     shareMode = b.dataset.share;
