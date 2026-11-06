@@ -120,8 +120,8 @@
     color:var(--ink);transition:opacity .3s ease;max-width:100%;
   }
   .amount .cur{font-size:.3em;font-weight:600;color:var(--accent);margin-right:.12em;letter-spacing:0;transform:translateY(-.34em)}
-  .amount .cur.coin{display:inline-flex;align-items:center;transform:translateY(-.04em);margin-right:.12em}
-  .amount .cur.coin svg{width:1.4em;height:1.4em;display:block}
+  .amount .cur.coin{display:inline-flex;align-items:center;transform:translateY(-.04em);margin-right:.26em}
+  .amount .cur.coin svg{width:1.25em;height:1.25em;display:block}
   .amount .dec{display:inline-flex;align-items:baseline;font-size:.44em;font-weight:600;letter-spacing:-.02em;color:var(--ink-2);margin-left:.04em}
   .amount .micro{font-size:.42em;color:var(--accent);font-variant-numeric:tabular-nums;margin-left:.02em}
   .idle .amount{opacity:.55}
@@ -134,12 +134,17 @@
   .readout .k{display:block;font-size:10.5px;color:var(--ink-3);margin-bottom:3px;letter-spacing:.04em}
   .readout .v{display:block;font-size:13.5px;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
   .readout .right{text-align:right}
-  .aside{margin-top:14px;font-size:13px;color:var(--ink-2);line-height:1.55;min-height:20px;letter-spacing:.01em}
+  .aside{margin-top:14px;font-size:12.5px;color:var(--ink-2);line-height:1.6;min-height:20px;letter-spacing:.01em;text-wrap:balance}
   .aside b{font-weight:700;color:var(--accent)}
   .aside .quip{display:block;margin-top:3px;font-size:12px;color:var(--ink-3)}
 
   .timeline{margin-top:26px;color:var(--ink-3)}
-  .timeline svg{display:block;width:100%;height:auto}
+  .blobs{display:flex;align-items:flex-end;gap:11px;min-height:62px}
+  .blob{display:block;border-radius:50%;background:var(--accent);opacity:.82;
+        transition:width .8s cubic-bezier(.22,1,.3,1),height .8s cubic-bezier(.22,1,.3,1)}
+  .blob.live{opacity:1;box-shadow:0 0 0 5px rgba(240,94,51,.10)}
+  body[data-theme="night"] .blob.live{box-shadow:0 0 0 5px rgba(255,138,91,.12)}
+  .blob.rest{background:transparent;color:var(--ink-3);font-size:11px;line-height:62px;width:auto;height:auto}
   .timeline .cap{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;color:var(--ink-3);margin-top:8px}
 
   /* 目标 */
@@ -620,22 +625,39 @@
     return arr[quipI % arr.length];
   }
 
+  function splitItem(name) {
+    var m = name.slice(1, 2), rest = name.slice(2);
+    if (!rest) { m = ''; rest = name; }
+    return { m: m, rest: rest };
+  }
+  function cnNum(n) { return ['零', '一', '两', '三', '四', '五'][n] || String(n); }
+
   function asideSentence(e, now, isSim) {
-    var T = tpl(), unit = T.items[T.asideUnit].v;
-    var c = e / unit, n = c >= 10 ? Math.round(c) : Math.floor(c);
+    var T = tpl(), items = T.items;
     var dw = durWords(liveWorkMs(now));
-    var Q = QUIPS[S.template] || QUIPS.worker;
     var verb = T.verb || '辛苦了';
-    var top = T.items[T.items.length - 1].v, ratio = e / top;
+    var Q = QUIPS[S.template] || QUIPS.worker;
+    var top = items[items.length - 1].v, ratio = e / top;
     var bucket = isSim ? 'sim' : ratio < 0.05 ? 'sub' : ratio < 0.15 ? 'early' : ratio < 0.35 ? 'mid' : ratio < 0.65 ? 'good' : 'near';
-    var quip = pickQuip(Q[bucket] || Q.n1, now);
+    var quip = pickQuip(Q[bucket] || Q.mid, now);
+
+    var idx = -1;
+    for (var i = 0; i < items.length; i++) if (e >= items[i].v) idx = i;
+
     var main;
-    if (isSim) main = verb + ' ' + dw + '，够 <b>' + n + '</b> ' + T.aside;
-    else if (c < 0.25) main = verb + ' ' + dw + '，连一' + T.aside + '都还没够';
-    else if (c < 1) main = verb + ' ' + dw + '，还差 <b>¥' + fen(unit - e) + '</b> 才够一' + T.aside;
-    else if (n <= 1) main = verb + ' ' + dw + '，总算够一' + T.aside;
-    else if (n <= 3) main = verb + ' ' + dw + '，勉强够 <b>' + n + '</b> ' + T.aside;
-    else main = verb + ' ' + dw + '，够 <b>' + n + '</b> ' + T.aside;
+    if (isSim) main = verb + ' ' + dw + '，换来' + items[Math.max(0, idx)].n;
+    else if (idx < 0) main = verb + ' ' + dw + '，还差 <b>¥' + fen(items[0].v - e) + '</b> 才够' + items[0].n;
+    else {
+      main = verb + ' ' + dw + '，换来' + items[idx].n;
+      var left = e - items[idx].v;
+      for (var j = idx - 1; j >= 0; j--) {
+        if (left >= items[j].v) {
+          var sp = splitItem(items[j].n), k = Math.min(4, Math.floor(left / items[j].v));
+          main += '，剩下的够' + (k === 1 ? '一' : cnNum(k)) + sp.m + sp.rest;
+          break;
+        }
+      }
+    }
     return main + '。<span class="quip">' + quip + '</span>';
   }
 
@@ -809,34 +831,32 @@
       S.sim.elapsedMs = simTotalMs(); S.sim.since = null; S.sim.done = true; save(); celebrateSimEnd();
     }
   }
-  // 今日时间带：8:00 起，把走过的时段画成细块
+  // 今天的时段：一段时间一个圆，越久越大（和 logo 同构）
   var tlSig = '';
   function renderTimeline(now) {
-    var segs = S.sessions || [];
-    var tail = S.since !== null && !S.sim.on ? [{ s: S.since, e: now }] : [];
-    var all = segs.concat(tail);
-    if (!all.length) { el.timeline.hidden = true; return; }
+    var segs = (S.sessions || []).slice();
+    if (S.since !== null && !S.sim.on) segs.push({ s: S.since, e: now, live: true });
+    if (!segs.length) { el.timeline.hidden = true; return; }
     el.timeline.hidden = false;
-    var bucket = Math.floor(now / 60000);
-    var sig = all.length + '|' + all.map(function (g) { return Math.round(g.s / 60000) + '-' + Math.round(g.e / 60000); }).join(',');
+
+    var MAX = 3 * 3600 * 1000;
+    var shown = segs.slice(0, 4), rest = segs.length - shown.length;
+    var sig = shown.map(function (g) { return Math.round((g.e - g.s) / 6000); }).join(',') + '|' + rest;
     if (sig === tlSig) return;
     tlSig = sig;
 
-    var t0 = new Date(); t0.setHours(8, 0, 0, 0);
-    var base = t0.getTime(), span = 16 * 3600 * 1000;
-    var W = 340, H = 12;
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="height:12px">';
-    svg += '<line x1="0" y1="6" x2="' + W + '" y2="6" stroke="currentColor" stroke-opacity=".16" stroke-width="1"/>';
-    all.forEach(function (g) {
-      var a = clamp((g.s - base) / span, 0, 1) * W, b = clamp((g.e - base) / span, 0, 1) * W;
-      if (b - a < 1.2) return;
-      svg += '<rect x="' + a.toFixed(1) + '" y="2" width="' + (b - a).toFixed(1) + '" height="8" rx="4" fill="var(--accent)" opacity=".9"/>';
+    var html = '<div class="blobs">';
+    shown.forEach(function (g) {
+      var d = 20 + 40 * Math.sqrt(Math.min(1, (g.e - g.s) / MAX));
+      html += '<span class="blob' + (g.live ? ' live' : '') + '" style="width:' + d.toFixed(1) + 'px;height:' + d.toFixed(1) + 'px"></span>';
     });
-    var nx = clamp((now - base) / span, 0, 1) * W;
-    svg += '<line x1="' + nx.toFixed(1) + '" y1="0" x2="' + nx.toFixed(1) + '" y2="12" stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>';
-    var capMid = all.length > 1 ? ('今天被切成 ' + all.length + ' 段') : '今天';
-    svg += '</svg><div class="cap"><span>8:00</span><span>' + capMid + '</span><span>24:00</span></div>';
-    el.timeline.innerHTML = svg;
+    if (rest > 0) html += '<span class="blob rest">+' + rest + '</span>';
+    html += '</div>';
+
+    var d0 = new Date(segs[0].s);
+    html += '<div class="cap"><span>' + (segs.length > 1 ? '今天被切成 ' + segs.length + ' 段' : '今天这一段') +
+            '</span><span>' + pad(d0.getHours()) + ':' + pad(d0.getMinutes()) + ' 开始</span></div>';
+    el.timeline.innerHTML = html;
   }
 
   function loop() { render(Date.now()); requestAnimationFrame(loop); }
@@ -1284,34 +1304,31 @@
     var segs = (S.sessions || []).slice(-30);
     var now = Date.now();
     if (!segs.length && S.earnedMs > 0) segs = [{ s: now - S.earnedMs, e: now }];
-    var dayStart = new Date(); dayStart.setHours(8, 0, 0, 0);
-    var t0 = dayStart.getTime(), spanMs = 16 * 3600 * 1000;
-    var W = 340, H = 46;
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" preserveAspectRatio="none" ' +
-      'style="display:block;border-top:1px solid rgba(128,119,110,.35);border-bottom:1px solid rgba(128,119,110,.35)">';
-    var longest = 0, count = 0, firstS = null, lastE = null;
+    var longest = 0, firstS = null, lastE = null;
     segs.forEach(function (g) {
-      var a = clamp((g.s - t0) / spanMs, 0, 1) * W, b = clamp((g.e - t0) / spanMs, 0, 1) * W;
-      if (b - a < 1.5) return;
       var dur = g.e - g.s;
       if (dur > longest) longest = dur;
-      count++;
       if (!firstS || g.s < firstS) firstS = g.s;
       if (!lastE || g.e > lastE) lastE = g.e;
-      svg += '<rect x="' + a.toFixed(1) + '" y="0" width="' + (b - a).toFixed(1) + '" height="' + H + '" fill="#F05E33" opacity="0.92"/>';
     });
-    svg += '</svg>';
-    svg += '<svg viewBox="0 0 ' + W + ' 14" width="100%" preserveAspectRatio="none" style="display:block;margin-top:6px">';
-    [8, 12, 16, 20, 24].forEach(function (h, i) {
-      var x = (i / 4) * (W - 1);
-      var anchor = i === 0 ? 'start' : (i === 4 ? 'end' : 'middle');
-      svg += '<text x="' + x.toFixed(1) + '" y="10" font-size="9" letter-spacing="1" fill="currentColor" opacity="0.55" text-anchor="' + anchor + '">' + h + ':00</text>';
+
+    var MAX = 3 * 3600 * 1000, shown = segs.slice(0, 6);
+    var html = '<div style="display:flex;align-items:flex-end;gap:14px;min-height:100px;margin:4px 0 0">';
+    shown.forEach(function (g) {
+      var d = 28 + 72 * Math.sqrt(Math.min(1, (g.e - g.s) / MAX));
+      html += '<span style="display:inline-block;width:' + d.toFixed(0) + 'px;height:' + d.toFixed(0) +
+              'px;border-radius:50%;background:#F05E33;opacity:.9"></span>';
     });
-    svg += '</svg>';
+    if (segs.length > shown.length) {
+      html += '<span style="color:#94836F;font-size:12px;padding-bottom:4px">+' + (segs.length - shown.length) + '</span>';
+    }
+    html += '</div>';
+    html += '<p class="tiny" style="margin:10px 0 0">一个圆 = 一段时间，越久越大。</p>';
+
     var fmt = function (ms) { var m = Math.round(ms / 60000); return m < 60 ? m + ' 分钟' : Math.floor(m / 60) + ' 小时 ' + (m % 60) + ' 分'; };
     var hh = function (t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
     return {
-      svg: svg, count: count,
+      svg: html, count: segs.length,
       longest: longest ? fmt(longest) : '',
       span: firstS ? hh(firstS) + '–' + hh(lastE) : '—'
     };
