@@ -2,6 +2,11 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.5.7] - 2026-11-06
+
+### 变更
+- 战报卡副标题改「钱没留下，东西攒了一堆。」——原来那句在断言用户银行账户里的事实，App 并不知道
+
 ## [1.5.6] - 2026-11-06
 
 ### 修复
