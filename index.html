@@ -92,7 +92,7 @@
   .restore button.mute{color:var(--ink-3);font-weight:400}
 
   /* 主区 */
-  .hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;min-height:0;padding:6px 0}
+  .hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;min-height:0;padding:0}
   .eyebrow{
     font-size:10.5px;letter-spacing:.2em;color:var(--ink-3);text-transform:uppercase;
     display:flex;align-items:center;gap:9px;margin-bottom:14px;
@@ -129,6 +129,9 @@
     margin-top:18px;font-size:13px;color:var(--ink-2);letter-spacing:.01em;line-height:1.5;min-height:19px;
   }
   .aside b{font-weight:600;color:var(--ink)}
+  .timeline{margin-top:36px;color:var(--ink-3)}
+  .timeline svg{display:block;width:100%;height:auto}
+  .timeline .cap{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:.14em;color:var(--ink-3);margin-top:7px;text-transform:uppercase}
 
   /* 目标（不是卡片，是一条带刻度的行） */
   .goal{flex:0 0 auto;border-top:1px solid var(--rule);padding-top:13px;margin-top:4px}
@@ -298,7 +301,7 @@
   </div>
 
   <section class="hero">
-    <div class="eyebrow"><span class="bean" id="beacon"></span><span id="eyebrowLabel">今日进账</span><span class="line"></span><b id="rateVal" style="font-weight:500;letter-spacing:.02em;color:var(--ink-2);text-transform:none">¥0.0000</b><span id="speedChip" hidden>×1</span></div>
+    <div class="eyebrow"><span class="bean" id="beacon"></span><span id="eyebrowLabel">今日进账</span><span class="line"></span><b id="rateVal" style="font-weight:500;letter-spacing:.02em;color:var(--ink-2);text-transform:none;font-size:11.5px">¥0.0000</b><span id="speedChip" hidden>×1</span></div>
     <div class="amount" id="amount">
       <span class="cur">¥</span><span id="amtInt">0</span><span class="dec">.<span id="amtDec">00</span><span class="micro" id="amtMicro">0</span></span>
     </div>
@@ -308,6 +311,7 @@
       <div class="right"><span class="k" id="slackK">摸鱼</span><span class="v" id="slackLabel">0 分</span></div>
     </div>
     <div class="aside" id="aside"></div>
+    <div class="timeline" id="timeline" hidden></div>
   </section>
 
   <section class="goal" id="goalCard">
@@ -503,7 +507,7 @@
    'btnFirstSave','aside','setSalary','setWorkdays','setHours','btnSettingsDone','btnResetDay','btnResetAll','btnUndo',
    'saveNote','tplPicks','timeSeg','simBox','simYears','speedPicks','themePicks','hideSeg','statsBar','statsTxt',
    'statsSeg','statAmount','statTiers','statList','statsSub','btnStatsClose','restoreBar','restoreTxt','btnResume',
-   'btnFresh','btnShare','shareNote','sharePicks','beacon'].forEach(function (id) { el[id] = document.getElementById(id); });
+   'btnFresh','btnShare','shareNote','sharePicks','beacon','timeline'].forEach(function (id) { el[id] = document.getElementById(id); });
 
   /* ---------- 工具 ---------- */
   function pad(n, w) { n = String(n); while (n.length < (w || 2)) n = '0' + n; return n; }
@@ -674,6 +678,7 @@
     } else el.aside.innerHTML = '';
 
     if (!celebrating) { if (isSim) renderSimGoal(now); else renderItemGoal(now, e); }
+    renderTimeline(now);
 
     if (!S.salary) el.statsTxt.innerHTML = '填完月薪才有的看';
     else if (S.hideMoney) el.statsTxt.innerHTML = '已遮住 <b>·</b> 档';
@@ -730,6 +735,35 @@
       S.sim.elapsedMs = simTotalMs(); S.sim.since = null; S.sim.done = true; save(); celebrateSimEnd();
     }
   }
+  // 今日时间带：8:00 起，把走过的时段画成细块
+  var tlSig = '';
+  function renderTimeline(now) {
+    var segs = S.sessions || [];
+    var tail = S.since !== null && !S.sim.on ? [{ s: S.since, e: now }] : [];
+    var all = segs.concat(tail);
+    if (!all.length) { el.timeline.hidden = true; return; }
+    el.timeline.hidden = false;
+    var bucket = Math.floor(now / 60000);
+    var sig = all.length + '|' + all.map(function (g) { return Math.round(g.s / 60000) + '-' + Math.round(g.e / 60000); }).join(',');
+    if (sig === tlSig) return;
+    tlSig = sig;
+
+    var t0 = new Date(); t0.setHours(8, 0, 0, 0);
+    var base = t0.getTime(), span = 16 * 3600 * 1000;
+    var W = 340, H = 12;
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="height:12px">';
+    svg += '<line x1="0" y1="6" x2="' + W + '" y2="6" stroke="currentColor" stroke-opacity=".22" stroke-width="1"/>';
+    all.forEach(function (g) {
+      var a = clamp((g.s - base) / span, 0, 1) * W, b = clamp((g.e - base) / span, 0, 1) * W;
+      if (b - a < 1.2) return;
+      svg += '<rect x="' + a.toFixed(1) + '" y="2" width="' + (b - a).toFixed(1) + '" height="8" fill="var(--accent)"/>';
+    });
+    var nx = clamp((now - base) / span, 0, 1) * W;
+    svg += '<line x1="' + nx.toFixed(1) + '" y1="0" x2="' + nx.toFixed(1) + '" y2="12" stroke="currentColor" stroke-opacity=".5" stroke-width="1"/>';
+    svg += '</svg><div class="cap"><span>8:00</span><span>今天</span><span>24:00</span></div>';
+    el.timeline.innerHTML = svg;
+  }
+
   function loop() { render(Date.now()); requestAnimationFrame(loop); }
 
   /* ---------- 庆祝 ---------- */
