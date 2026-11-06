@@ -292,6 +292,22 @@
 
   canvas.burst{position:fixed;inset:0;pointer-events:none;z-index:25}
 
+  .raise{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:24px;
+         background:rgba(40,26,16,.34);animation:fade .25s ease}
+  .raise[hidden]{display:none}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .raise-card{width:min(330px,86vw);background:var(--paper);border-radius:24px;padding:24px 22px 20px;
+              text-align:center;box-shadow:0 24px 50px -28px rgba(0,0,0,.55);animation:pop .4s cubic-bezier(.2,1.2,.4,1)}
+  .raise-ico{width:44px;height:44px;margin:0 auto 10px}
+  .raise-ico svg{width:100%;height:100%;display:block}
+  .raise-k{margin:0;font-size:12.5px;letter-spacing:.14em;color:var(--accent);font-weight:700}
+  .raise-num{margin:8px 0 10px;font-size:22px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .raise-sub{margin:0;font-size:12.5px;color:var(--ink-3);line-height:1.65}
+  .raise-num .arrow{color:var(--ink-3);font-weight:400;margin:0 2px}
+  .raise-num .pct{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:var(--accent);
+                  background:var(--tint);border-radius:99px;padding:2px 8px;vertical-align:2px}
+  .raise-card .primary{height:46px;font-size:15px}
+
   @media (prefers-reduced-motion: reduce){*{animation-duration:.001s !important;transition-duration:.001s !important}}
   @media (max-height:700px){
     .amount{font-size:clamp(50px,17vw,80px)}
@@ -368,7 +384,7 @@
 <!-- 首次设置 -->
 <section class="sheet first" id="sheetFirst" aria-hidden="true">
   <div class="grab"></div>
-  <h2>先说说你的月薪</h2>
+  <h2>填写月薪</h2>
   <p class="sub">只存在这台手机上，不联网，不上传。</p>
   <div class="big-input"><span>¥</span><input id="salaryInput" type="number" inputmode="decimal" placeholder="20000" autocomplete="off"></div>
   <div class="field"><label>每月工作<span class="unit">天</span></label>
@@ -485,6 +501,16 @@
 
 <canvas class="burst" id="burst"></canvas>
 
+  <div class="raise" id="raise" hidden>
+    <div class="raise-card">
+      <div class="raise-ico" aria-hidden="true"></div>
+      <p class="raise-k">加薪了</p>
+      <p class="raise-num" id="raiseNum"></p>
+      <p class="raise-sub" id="raiseSub"></p>
+      <button class="primary" id="raiseOk" style="margin-top:16px">好</button>
+    </div>
+  </div>
+
 <script>
 (function () {
   'use strict';
@@ -498,30 +524,24 @@
   var TEMPLATES = {
     worker: { name: '打工人', desc: '咖啡、面、外套', aside: '碗牛肉面', asideUnit: 1, verb: '辛苦了',
       run: '钱在走，别停太久', pause: '刚才那杯咖啡喝完了吗',
-      items: [{v:15,m:'☕',n:'一杯冰美式'},{v:28,m:'🍜',n:'一碗牛肉面'},{v:38,m:'🧋',n:'一杯奶茶加料'},
-              {v:68,m:'📖',n:'一本书'},{v:128,m:'🍽',n:'一顿好的'},{v:268,m:'👟',n:'一双帆布鞋'},
-              {v:688,m:'🧥',n:'一件外套'},{v:1288,m:'🏠',n:'一天房租'}] },
+      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🥟", "n": "一个肉包"}, {"v": 15, "m": "☕", "n": "一杯冰美式"}, {"v": 28, "m": "🍜", "n": "一碗牛肉面"}, {"v": 38, "m": "🧋", "n": "一杯奶茶加料"}, {"v": 68, "m": "📖", "n": "一本书"}, {"v": 88, "m": "🍱", "n": "一份加餐外卖"}, {"v": 128, "m": "🍽", "n": "一顿好的"}, {"v": 268, "m": "👟", "n": "一双帆布鞋"}, {"v": 388, "m": "🎧", "n": "一副耳机"}, {"v": 688, "m": "🧥", "n": "一件外套"}, {"v": 1288, "m": "🏠", "n": "一天房租"}, {"v": 1888, "m": "⌚", "n": "一块手表"}, {"v": 3800, "m": "📱", "n": "一部新手机"}, {"v": 6800, "m": "💻", "n": "一台笔电"}, {"v": 12800, "m": "📷", "n": "一台相机"}, {"v": 25000, "m": "🛋", "n": "一套客厅家具"}], items: [] },
     travel: { name: '旅行爱好者', desc: '车票、青旅、机票', aside: '杯机场咖啡', asideUnit: 1, verb: '走了',
       run: '钱在走，下一站更近一点', pause: '在哪个城市发呆？',
-      items: [{v:8,m:'🎫',n:'一张地铁票'},{v:38,m:'☕',n:'一杯机场咖啡'},{v:128,m:'🛏',n:'一晚青旅'},
-              {v:268,m:'🚗',n:'一天租车'},{v:388,m:'🎟',n:'一张景区门票'},{v:688,m:'🏝',n:'一晚海景房'},
-              {v:1288,m:'✈️',n:'一张短途机票'},{v:1888,m:'🎒',n:'一次周末旅行'}] },
+      catalog: [{"v": 3, "m": "💧", "n": "一瓶水"}, {"v": 8, "m": "🎫", "n": "一张地铁票"}, {"v": 38, "m": "☕", "n": "一杯机场咖啡"}, {"v": 68, "m": "🍜", "n": "一碗机场面"}, {"v": 128, "m": "🛏", "n": "一晚青旅"}, {"v": 268, "m": "🚗", "n": "一天租车"}, {"v": 388, "m": "🎟", "n": "一张景区门票"}, {"v": 688, "m": "🏝", "n": "一晚海景房"}, {"v": 1288, "m": "✈️", "n": "一张短途机票"}, {"v": 1888, "m": "🎒", "n": "一次周末旅行"}, {"v": 2600, "m": "🧳", "n": "一个登机箱"}, {"v": 3800, "m": "🏨", "n": "一晚五星酒店"}, {"v": 5200, "m": "📷", "n": "一台运动相机"}, {"v": 8800, "m": "🚄", "n": "一次跨省往返"}, {"v": 12000, "m": "🌏", "n": "一张欧洲往返机票"}, {"v": 26000, "m": "🗺", "n": "一次十天旅行"}], items: [] },
     home: { name: '居家博主', desc: '香薰、花、咖啡机', aside: '束花', asideUnit: 2, verb: '折腾了',
       run: '今天也在把家变好看', pause: '去浇一下那盆绿植',
-      items: [{v:58,m:'🕯',n:'一支香薰'},{v:88,m:'☕',n:'一只马克杯'},{v:128,m:'💐',n:'一束花'},
-              {v:268,m:'🍳',n:'一口铸铁锅'},{v:488,m:'🛏',n:'一套亚麻四件套'},{v:1288,m:'⚙️',n:'一台半自动咖啡机'},
-              {v:1888,m:'🪑',n:'一把好椅子'},{v:2688,m:'🏠',n:'一次全屋收纳'}] },
+      catalog: [{"v": 3, "m": "🧽", "n": "一块抹布"}, {"v": 12, "m": "🧴", "n": "一瓶洗洁精"}, {"v": 58, "m": "🕯", "n": "一支香薰"}, {"v": 88, "m": "☕", "n": "一只马克杯"}, {"v": 128, "m": "💐", "n": "一束花"}, {"v": 268, "m": "🍳", "n": "一口铸铁锅"}, {"v": 488, "m": "🛏", "n": "一套亚麻四件套"}, {"v": 688, "m": "💡", "n": "一盏落地灯"}, {"v": 1288, "m": "⚙️", "n": "一台半自动咖啡机"}, {"v": 1888, "m": "🪑", "n": "一把好椅子"}, {"v": 2688, "m": "🧹", "n": "一次全屋收纳"}, {"v": 3200, "m": "🤖", "n": "一台扫地机器人"}, {"v": 5800, "m": "🍽", "n": "一台洗碗机"}, {"v": 8800, "m": "📺", "n": "一台大屏电视"}, {"v": 13000, "m": "🛋", "n": "一张真皮沙发"}, {"v": 28000, "m": "🏠", "n": "一次全屋软装"}], items: [] },
     gamer: { name: '游戏玩家', desc: '十连、手柄、显示器', aside: '次十连', asideUnit: 0, verb: '肝了',
       run: '再刷一把就下班', pause: '先存档，再歇会儿',
-      items: [{v:68,m:'🎮',n:'一次十连'},{v:128,m:'🎧',n:'一个皮肤包'},{v:388,m:'🕹',n:'一个手柄'},
-              {v:888,m:'💺',n:'一把电竞椅'},{v:1288,m:'🖥',n:'一块显示器'},{v:1888,m:'🎧',n:'一副好耳机'},
-              {v:2688,m:'🎮',n:'一台掌机'},{v:3988,m:'🏆',n:'一套顶配外设'}] }
+      catalog: [{"v": 30, "m": "🎫", "n": "一个月会员"}, {"v": 68, "m": "🎮", "n": "一次十连"}, {"v": 128, "m": "🎧", "n": "一个皮肤包"}, {"v": 388, "m": "🕹", "n": "一个手柄"}, {"v": 888, "m": "💺", "n": "一把电竞椅"}, {"v": 1288, "m": "🖥", "n": "一块显示器"}, {"v": 1888, "m": "🎧", "n": "一副好耳机"}, {"v": 2688, "m": "🎮", "n": "一台掌机"}, {"v": 3988, "m": "⌨️", "n": "一套顶配外设"}, {"v": 5200, "m": "🎴", "n": "一块显卡"}, {"v": 6800, "m": "🖥", "n": "一台大屏显示器"}, {"v": 9000, "m": "📦", "n": "一台主机"}, {"v": 12000, "m": "💻", "n": "一台游戏本"}, {"v": 18000, "m": "🪑", "n": "一套电竞房桌椅"}, {"v": 26000, "m": "🏆", "n": "一套顶配全家桶"}], items: [] }
   };
   var TPL_ORDER = ['worker', 'travel', 'home', 'gamer'];
 
   function mountLogo() {
     var brand = document.querySelector('.brand');
     if (brand && !brand.querySelector('svg')) brand.insertAdjacentHTML('afterbegin', ICON_SVG.replace('width="26" height="26"', 'width="22" height="22"'));
+    var ico = document.querySelector('.raise-ico');
+    if (ico) ico.innerHTML = ICON_SVG;
     var cur = document.querySelector('.amount .cur');
     if (cur && !cur.querySelector('svg')) {
       cur.classList.add('coin');
@@ -550,7 +570,7 @@
   ['amount','amtInt','amtDec','amtMicro','rateVal','eyebrowLabel','speedChip','workedLabel','slackLabel','slackK',
    'goalCard','goalName','goalPrice','goalFill','goalLeft','goalEta','btnMain','hint','btnSettings','btnHide','scrim',
    'sheetFirst','sheetSettings','sheetStats','burst','dayLabel','weekLabel','salaryInput','workdaysInput','hoursInput',
-   'btnFirstSave','aside','setSalary','setWorkdays','setHours','btnSettingsDone','btnResetDay','btnResetAll','btnUndo',
+   'btnFirstSave','aside','setSalary','setWorkdays','setHours','btnSettingsDone','btnResetDay','btnResetAll','btnUndo','raise','raiseNum','raiseSub','raiseOk',
    'saveNote','tplPicks','timeSeg','simBox','simYears','speedPicks','themePicks','hideSeg','statsBar','statsTxt',
    'statsSeg','statAmount','statTiers','statList','statsSub','btnStatsClose','restoreBar','restoreTxt','btnResume',
    'btnFresh','btnShare','shareNote','sharePicks','beacon','timeline'].forEach(function (id) { el[id] = document.getElementById(id); });
@@ -562,6 +582,31 @@
   function fen(v) { return (Math.round(v * 100) / 100).toFixed(2); }
   function num(v) { return Number(v) || 0; }
   function tpl() { return TEMPLATES[S.template] || TEMPLATES.worker; }
+
+  // 阶梯的时间刻度（占一天工资的比例）：5 分钟 → 1.15 天
+  var SLOTS = [0.0104, 0.03, 0.06, 0.12, 0.22, 0.38, 0.62, 1.15];
+  function reflowLadders() {
+    var day = S.salary / Math.max(1, S.workdays);
+    TPL_ORDER.forEach(function (k) {
+      var T = TEMPLATES[k];
+      if (!T.catalog) return;
+      var cat = T.catalog.slice().sort(function (a, b) { return a.v - b.v; });
+      var used = {}, out = [], floorV = 0;
+      for (var i = 0; i < SLOTS.length; i++) {
+        var target = day * SLOTS[i], best = -1, bestD = Infinity;
+        for (var j = 0; j < cat.length; j++) {
+          var it = cat[j];
+          if (used[it.n] || it.v <= floorV * 1.01) continue;
+          var d = Math.abs(Math.log(it.v / Math.max(0.5, target)));
+          if (d < bestD) { bestD = d; best = j; }
+        }
+        if (best < 0) { for (var q = cat.length - 1; q >= 0; q--) { if (!used[cat[q].n]) { best = q; break; } } }
+        if (best < 0) break;
+        used[cat[best].n] = 1; out.push(cat[best]); floorV = cat[best].v;
+      }
+      if (out.length) T.items = out;
+    });
+  }
   function isRunning() { return S.sim.on ? S.sim.since !== null : S.since !== null; }
   function mult() { return S.sim.on ? S.sim.speed : 1; }
   function cn(n) { return Number(n).toLocaleString('en-US'); }
@@ -1041,21 +1086,39 @@
     updateSaveNote(); openSheet(el.sheetSettings);
   }
   el.btnSettings.addEventListener('click', openSettings);
+  var pendingRaise = null;
   function commitSettings() {
+    var prevSalary = S.salary;
     S.salary = Math.max(0, num(el.setSalary.value));
     S.workdays = clamp(num(el.setWorkdays.value) || 21.75, 1, 31);
     S.hours = clamp(num(el.setHours.value) || 8, 1, 24);
     S.sim.years = clamp(Math.round(num(el.simYears.value) || 1), 1, 40);
     if (S.sim.elapsedMs > simTotalMs()) S.sim.elapsedMs = simTotalMs();
-    save(); render(Date.now());
+    reflowLadders(); save(); render(Date.now());
+    if (prevSalary > 0 && S.salary > prevSalary * 1.005) pendingRaise = { from: prevSalary, to: S.salary };
   }
-  el.btnSettingsDone.addEventListener('click', function () { commitSettings(); closeSheets(); });
+  el.raiseOk.addEventListener('click', function () { el.raise.hidden = true; });
+  el.raise.addEventListener('click', function (e) { if (e.target === el.raise) el.raise.hidden = true; });
+  el.btnSettingsDone.addEventListener('click', function () {
+    commitSettings(); closeSheets();
+    if (pendingRaise) { var p = pendingRaise; pendingRaise = null; setTimeout(function () { showRaise(p); }, 300); }
+  });
+
+  function showRaise(p) {
+    var its = tpl().items;
+    var pct = Math.round((p.to / p.from - 1) * 100);
+    el.raiseNum.innerHTML = '¥' + cn(Math.round(p.from)) + ' <span class="arrow">→</span> ¥' + cn(Math.round(p.to)) +
+      '<span class="pct">+' + pct + '%</span>';
+    el.raiseSub.textContent = '阶梯重算：从「' + its[0].n + '」到「' + its[its.length - 1].n + '」。今天攒下的，按新数字重算过。';
+    el.raise.hidden = false;
+    burst();
+  }
   el.btnFirstSave.addEventListener('click', function () {
     if (!num(el.salaryInput.value)) { el.salaryInput.focus(); return; }
     S.salary = Math.max(0, num(el.salaryInput.value));
     S.workdays = clamp(num(el.workdaysInput.value) || 21.75, 1, 31);
     S.hours = clamp(num(el.hoursInput.value) || 8, 1, 24);
-    save(); closeSheets(); start();
+    reflowLadders(); save(); closeSheets(); start();
   });
 
   /* 步进器 */
@@ -1252,9 +1315,11 @@
     var kicker = tpl().name + (isSim ? ' · 模拟 ' + S.sim.years + ' 年' : '');
 
     if (shareMode === 'line') {
-      var line = cups < 1
-        ? '今天还差一点点，就够一' + tpl().aside
-        : '今天够买' + approx(Math.floor(cups)).replace('约 ', '约 ') + tpl().aside;
+      var its = tpl().items, hi = -1;
+      for (var q = 0; q < its.length; q++) if (amt >= its[q].v) hi = q;
+      var line = hi < 0
+        ? '今天还差 ¥' + fen(its[0].v - amt) + '，才够' + its[0].n
+        : '今天换来' + its[hi].n;
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
         '<h1>' + line + '</h1>' +
@@ -1394,7 +1459,7 @@
 
   /* ---------- 启动 ---------- */
   mountLogo();
-  load(); paintDate(); applyTheme();
+  load(); reflowLadders(); paintDate(); applyTheme();
   lastTier = tiersReached(moneyNow(Date.now()));
   lastSimYear = S.sim.on ? Math.floor(liveWorkMs(Date.now()) / Math.max(1, yearMs())) : -1;
   el.btnHide.setAttribute('aria-pressed', String(!!S.hideMoney));
@@ -1408,11 +1473,12 @@
 
   window.__earn = {
     get state() { return S; },
-    patch: function (o) { Object.keys(o).forEach(function (k) { S[k] = o[k]; }); syncMarks(); save(); render(Date.now()); },
+    patch: function (o) { Object.keys(o).forEach(function (k) { S[k] = o[k]; }); reflowLadders(); syncMarks(); save(); render(Date.now()); },
     rate: ratePerSecond, reset: resetAll, stats: openStats,
     shareHTML: buildShareHTML, share: doShare,
     setShareMode: function (m) { shareMode = m; },
-    hide: function (v) { setHide(v); save(); }
+    hide: function (v) { setHide(v); save(); },
+    ladder: function () { return tpl().items.map(function (it) { return it.v + ' ' + it.n; }); }
   };
   requestAnimationFrame(loop);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
