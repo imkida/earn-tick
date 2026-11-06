@@ -1336,11 +1336,11 @@
     '.brand{font-size:11px;letter-spacing:.34em;font-weight:600}',
     '.date{font-size:10.5px;letter-spacing:.12em;color:#94836F}',
     '.kicker{margin-top:26px;font-size:10px;letter-spacing:.2em;color:#94836F;text-transform:uppercase}',
-    'h1{margin-top:12px;font-size:31px;line-height:1.22;font-weight:540;letter-spacing:-.03em}',
+    'h1{margin-top:12px;font-size:31px;line-height:1.22;font-weight:540;letter-spacing:-.03em;text-wrap:balance}',
     'h1 b{font-weight:600;color:#F05E33}',
     '.hero-num{margin-top:16px;font-size:64px;line-height:.92;font-weight:520;letter-spacing:-.05em}',
     '.hero-num i{font-style:normal;font-size:.34em;color:#94836F;margin-right:.08em;vertical-align:.5em;letter-spacing:0}',
-    '.sub{margin-top:6px;font-size:12.5px;color:#4C4339;line-height:1.6;letter-spacing:.01em}',
+    '.sub{margin-top:6px;font-size:12.5px;color:#4C4339;line-height:1.6;letter-spacing:.01em;text-wrap:balance}',
     '.stats{display:flex;margin-top:24px;border-top:1px solid rgba(25,20,16,.18);border-bottom:1px solid rgba(25,20,16,.18)}',
     '.stats div{flex:1;padding:12px 0 13px;border-right:1px solid rgba(25,20,16,.1)}',
     '.stats div:last-child{border-right:0;text-align:right}',
@@ -1375,9 +1375,9 @@
       '<title>我的每秒</title><style>' + SHARE_CSS + '</style></head><body><div class="card">' +
       '<div class="top"><span class="brand">' + ICON_SVG.replace('width="26" height="26"', 'width="20" height="20"') + '每秒</span><span class="date">' + dateStr + '</span></div>' +
       bodyHtml +
-      '<footer><div class="cta">把你自己的一秒也变成钱</div>' +
+      '<footer><div class="cta">日常的每秒都有钱</div>' +
       '<a class="url" href="' + SHARE_URL + '">' + SHARE_URL.replace(/^https:\/\//, '') + '</a>' +
-      '<p class="tiny">数据只在你自己浏览器里，不上传、不联网。这是 ' + dateStr + ' 生成的一张快照。</p>' +
+      '<p class="tiny">数据只在你自己浏览器里，没上传、没联网。</p>' +
       '</footer></div></body></html>';
   }
 
@@ -1400,11 +1400,11 @@
       for (var q = 0; q < its.length; q++) if (todayM >= its[q].v) hi = q;
       var line = hi < 0
         ? '今天还差 ¥' + fen(its[0].v - todayM) + '，才够' + its[0].n
-        : '今天换来' + its[hi].n;
+        : (isSim ? '模拟 ' + S.sim.years + ' 年，换来' + its[hi].n : '今天换来' + its[hi].n);
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
         '<h1>' + line + '</h1>' +
-        '<p class="sub">剩下的就不说了。想看自己的一秒值多少，点下面的地址。</p>');
+        '<p class="sub">剩下的就不说了。想知道自己的一秒值多少钱，点下面的地址。</p>');
     }
 
     if (shareMode === 'rhythm') {
@@ -1412,7 +1412,7 @@
       return shareShell(dateStr,
         '<p class="kicker">' + kicker + '</p>' +
         '<h1>今天被切成 <b>' + blocks.count + '</b> 段</h1>' +
-        '<p class="sub">' + (blocks.longest ? '最完整的一段 ' + blocks.longest + '，其余都是碎片。' : '还没凑出完整的一段。') + '</p>' +
+        '<p class="sub">' + blocks.note + '</p>' +
         '<div style="margin-top:22px">' + blocks.svg + '</div>' +
         '<div class="stats"><div><span>时段</span><b>' + blocks.span + '</b></div>' +
         '<div><span>最长一段</span><b>' + (blocks.longest || '—') + '</b></div></div>' +
@@ -1427,14 +1427,14 @@
         '<p class="sub">今天也刚开始，等它再走一会儿。</p>');
     }
     var listHtml = '<ol>' + shown.map(function (x) {
-      var v = money ? '≈¥' + cn(roundMoney(x.c * x.it.v)) : '×' + approx(x.c);
+      var v = money ? '¥' + cn(x.c * x.it.v) : '×' + approx(x.c);
       return '<li><span class="i">' + pad(x.i) + '</span><span class="n">' + x.it.n + '</span><span class="v">' + v + '</span></li>';
     }).join('') + '</ol>';
 
     var head = money
       ? '<div class="hero-num"><i>≈¥</i>' + cn(roundMoney(allM)) + '</div>' +
-        '<p class="sub">今天又攒到 ' + reached.length + ' 档东西</p>'
-      : '<h1>攒到 <b>' + reached.length + '</b> 档</h1><p class="sub">每一档都是工资换来的，没花一分钱</p>';
+        '<p class="sub">17 档里，攒到了 ' + reached.length + ' 档</p>'
+      : '<h1>攒到 <b>' + reached.length + '</b> 档</h1><p class="sub">都是一天一天换来的，没动存款</p>';
 
     var stats = money
       ? '<div class="stats"><div><span>今天</span><b>≈¥' + cn(roundMoney(todayM)) + '</b></div>' +
@@ -1450,18 +1450,27 @@
     var segs = (S.sessions || []).slice(-30);
     var now = Date.now();
     if (!segs.length && S.earnedMs > 0) segs = [{ s: now - S.earnedMs, e: now }];
-    var longest = 0, firstS = null, lastE = null;
+    var longest = 0, firstS = null, lastE = null, shortOnes = 0;
     segs.forEach(function (g) {
       var dur = g.e - g.s;
       if (dur > longest) longest = dur;
+      if (dur < 45 * 60000) shortOnes++;
       if (!firstS || g.s < firstS) firstS = g.s;
       if (!lastE || g.e > lastE) lastE = g.e;
     });
 
-    var MAX = 3 * 3600 * 1000, shown = segs.slice(0, 6);
+    var fmt = function (ms) { var m = Math.round(ms / 60000); return m < 60 ? m + ' 分钟' : Math.floor(m / 60) + ' 小时 ' + (m % 60) + ' 分'; };
+    var hh = function (t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+
+    var note = !segs.length ? '还没凑出完整的一段。'
+      : segs.length === 1 ? '今天一整段，没被打断。'
+      : (shortOnes > 0 ? '最长的一段 ' + fmt(longest) + '，其余都是碎片。'
+                       : '今天没怎么被打断。');
+
+    var MAX = 6 * 3600 * 1000, shown = segs.slice(0, 6);
     var html = '<div style="display:flex;align-items:flex-end;gap:14px;min-height:100px;margin:4px 0 0">';
     shown.forEach(function (g) {
-      var d = 28 + 72 * Math.sqrt(Math.min(1, (g.e - g.s) / MAX));
+      var d = 26 + 74 * Math.sqrt(Math.min(1, (g.e - g.s) / MAX));
       html += '<span style="display:inline-block;width:' + d.toFixed(0) + 'px;height:' + d.toFixed(0) +
               'px;border-radius:50%;background:#F05E33;opacity:.9"></span>';
     });
@@ -1471,10 +1480,8 @@
     html += '</div>';
     html += '<p class="tiny" style="margin:10px 0 0">一个圆 = 一段时间，越久越大。</p>';
 
-    var fmt = function (ms) { var m = Math.round(ms / 60000); return m < 60 ? m + ' 分钟' : Math.floor(m / 60) + ' 小时 ' + (m % 60) + ' 分'; };
-    var hh = function (t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
     return {
-      svg: html, count: segs.length,
+      svg: html, count: segs.length, note: note,
       longest: longest ? fmt(longest) : '',
       span: firstS ? hh(firstS) + '–' + hh(lastE) : '—'
     };
