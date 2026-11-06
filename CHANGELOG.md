@@ -2,6 +2,11 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [1.5.4] - 2026-11-06
+
+### 变更
+- 分享卡页脚加回隐私说明：数据只在你自己浏览器里，没上传、没联网。
+
 ## [1.5.3] - 2026-11-06
 
 ### 文案做减法
