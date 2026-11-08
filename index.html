@@ -255,6 +255,13 @@
            font-size:12.5px;font-weight:600;letter-spacing:.01em;text-align:center}
   .linkbtn i{display:block;margin-top:2px;font-style:normal;font-size:10.5px;font-weight:400;color:var(--ink-3)}
   .linkbtn:active{transform:scale(.99);background:var(--tint)}
+  .aside{transition:opacity .24s ease}
+  .aside.fade{opacity:0}
+  .evt-in{display:block;border-left:2px solid var(--accent);padding-left:10px}
+  .evt-in i{display:block;font-style:normal;font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:700}
+  .evt-in b{display:block;margin-top:3px;font-size:15px;font-weight:600;color:var(--ink)}
+  .evt-in span{display:block;margin-top:2px;font-size:12.5px;color:var(--ink-3);line-height:1.6}
+  .stat-trophy.ev i{width:16px;font-size:10.5px;color:var(--ink-3);font-weight:600}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 104px);transform:translateX(-50%);
          z-index:60;background:rgba(25,20,16,.92);color:#FFF6EA;font-size:12.5px;padding:9px 15px;
          border-radius:99px;box-shadow:0 10px 24px -12px rgba(0,0,0,.5);animation:fade .2s ease}
@@ -588,18 +595,81 @@
 
   var QUIPS = {"worker": {"zero": ["今天还没开张，一分钱都还没挣。", "椅子还没坐热，先别急。", "钱包今天很安静。"], "sub": ["才刚开头，别急。", "离房租还早着呢。", "先攒够今天这顿。"], "early": ["加个蛋还得犹豫一下。", "点单之前还是看了一眼余额。", "吃面不敢要小菜。"], "mid": ["够吃几顿好的，就是都舍不得。", "数字涨了，房租还是很远。", "够今天，不够月底。"], "good": ["房租还差一截，先别想。", "数字看着不错，钱包还是薄。", "离那个大件近了，但还没到。"], "near": ["快够一天房租了，交完就没了。", "熬到这会儿，房租也才刚够。", "再往上就是别人的房租了。"], "sim": ["梦里什么都有。", "反正是模拟的，随便点。"]}, "travel": {"zero": ["还没开张，连地铁都坐不起。", "行李箱还锁着。", "地图打开又关上了。"], "sub": ["才刚进站，路还长。", "离机票还早。", "先攒够路上的一杯咖啡。"], "early": ["单程票先能进站，回程再想。", "青旅上铺的钱还没攒够。", "只够走，不够住。"], "mid": ["够一张门票，年假不够。", "住一晚可以，吃饭另算。", "出去一趟，回来要缓半个月。"], "good": ["机票有了，请假还没批。", "行李额还得另外算。", "攒得动路费，攒不动假期。"], "near": ["快够一次周末旅行了，年假呢。", "钱快够了，人还没放假。", "路线都规划好了，就是走不了。"], "sim": ["梦里环游世界。", "这一轮够飞一趟，不用请假。"]}, "home": {"zero": ["还没开张，花还没买。", "家里还是老样子。", "购物车先放着。"], "sub": ["才刚开头，慢慢添。", "家里还是老样子。", "购物车先放着。"], "early": ["花有了，花瓶还是旧的。", "先买最小的那件，慢慢来。", "好看的都贵，先挑便宜的。"], "mid": ["锅有了，厨房还是租的。", "好看的东西不敢买，怕搬家。", "墙上想钉个钉子都得问一声。"], "good": ["四件套攒到了，房子不是自己的。", "想换的椅子，房东说别动墙。", "越收拾越舍不得搬。"], "near": ["快够全屋收纳了，收拾的还是别人的家。", "东西都买得起，就是搬不走。", "攒到这一步，还是在租房。"], "sim": ["梦里有个自己的房子。", "这一轮够装修一遍了。"]}, "gamer": {"zero": ["还没开张，卡池先别开。", "体力满了，钱包空的。", "先看会儿别人的战绩。"], "sub": ["才刚开头，卡池先别急。", "离保底还早。", "先看会儿别人的战绩。"], "early": ["抽了一次，全是碎片。", "皮肤到手，角色还没有。", "保底还差得远。"], "mid": ["够买手柄，游戏还没通。", "队友还是那几个。", "买得起皮肤，买不起时间。"], "good": ["显示器快够了，桌子放不下。", "配置上来了，手速没上来。", "越氪越菜，是这个道理。"], "near": ["快满配了，可惜没时间玩。", "全都配齐了，也没人一起玩。", "肝到这一步，段位还在原地。"], "sim": ["梦里已经满配。", "这一轮够氪一单了。"]}};
 
+  var EVENTS = {
+    doctor: [
+      { t: '小', lam: 0.035, n: '病人的感谢', d: '出院那天，家属说了句谢谢。' },
+      { t: '小', lam: 0.035, n: '临时多休半天', d: '护士长说：今天你先回去睡。' },
+      { t: '小', lam: 0.03, n: '一顿免费的盒饭', d: '食堂阿姨多给了你一勺。' },
+      { t: '小', lam: 0.03, n: '平安的一夜', d: '这个夜班什么都没发生，很难得。' },
+      { t: '小', lam: 0.025, n: '主任替你顶了个门诊', d: '他说：你去歇着。' },
+      { t: '小', lam: 0.025, n: '摇到一个双休', d: '排班表上，这周居然连着两天。' },
+      { t: '小', lam: 0.03, n: '病人塞了个苹果', d: '塞在白大褂口袋里，还热着。' },
+      { t: '小', lam: 0.025, n: '实习生把病历写完了', d: '第一次觉得带教有点值。' },
+      { t: '中', lam: 0.0012, n: '论文中了一篇', d: '投了七次，第七次中了。' },
+      { t: '中', lam: 0.001, n: '评上了职称', d: '公示那天，名单里有你。' },
+      { t: '中', lam: 0.001, n: '一台漂亮的手术', d: '主任拍了拍你的肩，什么都没说。' },
+      { t: '中', lam: 0.0009, n: '带教的学生考上了', d: '他发消息说：老师，我考上了。' },
+      { t: '中', lam: 0.0009, n: '一整天空闲的门诊', d: '一个人都没骂你。' },
+      { t: '大', lam: 0.00004, gate: 10000, n: '研发了一种抗癌新药', d: '你的名字进了临床试验名单。' },
+      { t: '大', lam: 0.00003, gate: 15000, n: '带着专利出来创业', d: '第一轮融资到账那天，你还穿着白大褂。' },
+      { t: '大', lam: 0.00003, gate: 20000, n: '写进了一版指南', d: '以后别人照着你的那条做。' },
+      { t: '大', lam: 0.00002, gate: 25000, n: '财富自由', d: '梦里的。醒来还在查房。' }
+    ],
+    worker: [
+      { t: '小', lam: 0.05, n: '老板今天没来', d: '整层楼都松了一口。' },
+      { t: '小', lam: 0.05, n: '同事请你喝了杯咖啡', d: '不用还的那种。' },
+      { t: '小', lam: 0.04, n: '通勤一路绿灯', d: '一次都没等红灯。' },
+      { t: '小', lam: 0.04, n: '今天的会取消了', d: '日历上少了一块红。' },
+      { t: '中', lam: 0.0012, n: '涨了一次薪', d: '涨得不多，但确实涨了。' },
+      { t: '中', lam: 0.001, n: '年假批了', d: '批了三天，够喘口气。' },
+      { t: '中', lam: 0.001, n: '项目上线没出事', d: '一个报警都没有。' },
+      { t: '大', lam: 0.00004, gate: 8000, n: '副业做成了', d: '第一次觉得可以不全靠上班。' },
+      { t: '大', lam: 0.00002, gate: 20000, n: '提前退休', d: '梦里的。醒来还在开会。' }
+    ],
+    travel: [
+      { t: '小', lam: 0.05, n: '免费升了舱', d: '什么都没说，就把你换了座位。' },
+      { t: '小', lam: 0.05, n: '青旅老板送了早餐', d: '说是今天面包做多了。' },
+      { t: '小', lam: 0.04, n: '遇到一个聊得来的人', d: '一起走了半条街。' },
+      { t: '小', lam: 0.04, n: '捡到一张打折票', d: '便宜得不像真的。' },
+      { t: '中', lam: 0.0012, n: '签证过了', d: '比想象中顺利。' },
+      { t: '中', lam: 0.001, n: '走过十个城市', d: '地图上连成了一条线。' },
+      { t: '大', lam: 0.00004, gate: 8000, n: '环游了一整年', d: '回来时行李少了一半。' },
+      { t: '大', lam: 0.00002, gate: 16000, n: '在某个城市住下来', d: '这次不是路过。' }
+    ],
+    home: [
+      { t: '小', lam: 0.05, n: '房东没涨租', d: '他说再看看。' },
+      { t: '小', lam: 0.05, n: '绿植活下来了', d: '第三盆，终于有一盆活着。' },
+      { t: '小', lam: 0.04, n: '邻居送了块蛋糕', d: '说是烤多了。' },
+      { t: '小', lam: 0.04, n: '一次收纳成功', d: '抽屉关上了，很顺。' },
+      { t: '中', lam: 0.0012, n: '搬进更好的房子', d: '采光好一点，租金贵一点。' },
+      { t: '中', lam: 0.001, n: '装修完了', d: '最后一颗螺丝拧上去那天。' },
+      { t: '大', lam: 0.00004, gate: 8000, n: '有了自己的房子', d: '墙上想钉哪就钉哪。' },
+      { t: '大', lam: 0.00002, gate: 16000, n: '家上了杂志', d: '别人开始照着你的家装。' }
+    ],
+    gamer: [
+      { t: '小', lam: 0.05, n: '排位连胜', d: '连着五把，队友都正常。' },
+      { t: '小', lam: 0.05, n: '抽到了想要的角色', d: '没歪。' },
+      { t: '小', lam: 0.04, n: '队友很靠谱', d: '难得一次没人挂机。' },
+      { t: '小', lam: 0.04, n: '通宵没被骂', d: '家里没人发现。' },
+      { t: '中', lam: 0.0012, n: '上了高段位', d: '截图存下来了。' },
+      { t: '中', lam: 0.001, n: '比赛拿了名次', d: '小队群里刷了一晚上。' },
+      { t: '大', lam: 0.00004, gate: 8000, n: '打进了职业', d: '爸妈还是不太理解。' },
+      { t: '大', lam: 0.00002, gate: 16000, n: '做的游戏上线了', d: '商店页面上有你的名字。' }
+    ]
+  };
+
   var S = {
     v: 2,
     salary: null, workdays: 21.75, hours: 8,
     template: 'worker', theme: 'auto', hideMoney: false,
     day: null,
     earnedMs: 0, since: null, pausedAt: null, slackMs: 0,
-    ledgerMs: {}, sessions: [],
+    ledgerMs: {}, sessions: [], finds: [], evAt: {},
     sim: { on: false, years: 1, speed: 3600, elapsedMs: 0, since: null, done: false },
     savedAt: 0
   };
 
-  var el = {};
+  var el = {}, evtHold = false, lastAside = '';
   ['amount','amtInt','amtDec','amtMicro','rateVal','eyebrowLabel','speedChip','workedLabel','slackLabel','slackK',
    'goalCard','goalName','goalPrice','goalFill','goalLeft','goalEta','btnMain','hint','btnSettings','btnHide','scrim',
    'sheetFirst','sheetSettings','sheetStats','burst','dayLabel','weekLabel','salaryInput','workdaysInput','hoursInput',
@@ -914,18 +984,60 @@
     else if (e > 0) asideHTML = asideSentence(e, now, isSim);
     else if (isSim) asideHTML = '';
     else asideHTML = pickQuip((QUIPS[S.template] || QUIPS.worker).zero, now);
-    if (asideHTML !== lastAside) {
+    if (!evtHold && asideHTML !== lastAside) {
       lastAside = asideHTML;
       if (asideHTML) el.aside.innerHTML = asideHTML; else el.aside.textContent = '';
     }
 
     if (!celebrating) { if (isSim) renderSimGoal(now); else renderItemGoal(now, e); }
     renderTimeline(now);
+    checkEvents(now);
 
     if (!S.salary) el.statsTxt.innerHTML = '填完月薪才有的看';
     else if (S.hideMoney) el.statsTxt.innerHTML = '已遮住 <b>·</b> 档';
     else if (isSim) el.statsTxt.innerHTML = '本轮 <b>' + tiersReached(e) + '</b> 档';
     else el.statsTxt.innerHTML = '今天 <b>' + tiersReached(e) + '</b> 档 · 累计 <b>' + tiersReached(r * tplTotalMsLive(now) / 1000) + '</b> 档';
+  }
+
+  function showEvent(hit) {
+    evtHold = true;
+    el.aside.innerHTML = '<div class="evt-in"><i>奇遇 · ' + hit.t + '</i><b>' + hit.n + '</b>' +
+      '<span>' + hit.d + '</span></div>';
+    lastAside = null;
+    clearTimeout(showEvent.timer);
+    showEvent.timer = setTimeout(function () {
+      evtHold = false;
+      el.aside.classList.add('fade');
+      setTimeout(function () { el.aside.classList.remove('fade'); }, 260);
+    }, 11000);
+  }
+
+  function checkEvents(now) {
+    var pool = EVENTS[S.template];
+    if (!pool || !S.salary) return;
+    var workMs = S.sim.on ? liveWorkMs(now) : tplTotalMsLive(now);
+    if (!(S.template in S.evAt)) { S.evAt[S.template] = workMs; return; }
+    var mark = S.evAt[S.template];
+    if (workMs < mark) { S.evAt[S.template] = workMs; return; }
+    var dtH = (workMs - mark) / 3600000;
+    if (dtH < 0.05) return;
+    S.evAt[S.template] = workMs;
+    var hours = workMs / 3600000, hits = [];
+    for (var i = 0; i < pool.length; i++) {
+      var e = pool[i];
+      if (hours < (e.gate || 0)) continue;
+      if (Math.random() < (1 - Math.exp(-e.lam * dtH))) hits.push(e);
+    }
+    if (!hits.length) return;
+    var W = { '大': 3, '中': 2, '小': 1 };
+    hits.sort(function (a, b) { return (W[b.t] || 0) - (W[a.t] || 0); });
+    hits = hits.slice(0, 3);
+    for (var j = 0; j < hits.length; j++) {
+      S.finds.push({ n: hits[j].n, d: hits[j].d, t: hits[j].t, at: Date.now() });
+    }
+    if (S.finds.length > 80) S.finds = S.finds.slice(-80);
+    save();
+    showEvent(hits[0]);
   }
 
   function renderItemGoal(now, e) {
@@ -1344,6 +1456,12 @@
           '<span class="v">' + (S.hideMoney ? '·' : '×' + c) + '</span></div>';
       });
     });
+    if (S.finds.length) {
+      html += '<div class="stat-group"><span>奇遇</span><span>' + S.finds.length + ' 件</span></div>';
+      html += S.finds.slice(-6).reverse().map(function (f) {
+        return '<div class="stat-trophy ev"><i>' + f.t + '</i><span>' + f.n + '</span></div>';
+      }).join('');
+    }
     var tr = tpl().trophies || [];
     if (tr.length) {
       var workH = (isSim ? liveWorkMs(now) : tplTotalMsLive(now)) / 3600000;
