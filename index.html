@@ -912,22 +912,12 @@
 
   // 阶梯顺序兑换：攒够就换一件，换完往上走，一轮走完再从头
   function ladderCounts(m) {
-    var items = tpl().items, n = items.length, out = [];
-    for (var i = 0; i < n; i++) out.push(0);
-    var cycle = 0;
-    for (var q = 0; q < n; q++) cycle += items[q].v;
-    if (cycle > 0 && m >= cycle) {
-      var k = Math.floor(m / cycle);
-      for (var w = 0; w < n; w++) out[w] += k;
-      m -= k * cycle;
-    }
-    for (var pass = 0; pass < 2; pass++) {
-      for (var j = 0; j < n; j++) {
-        if (m >= items[j].v) { m -= items[j].v; out[j]++; } else return out;
-      }
-    }
+    // 与主界面同一套账：价格够没够，够一件算一件（不做"逐件花掉"的二次计算）
+    var items = tpl().items, out = [];
+    for (var i = 0; i < items.length; i++) out.push(m >= items[i].v ? 1 : 0);
     return out;
   }
+
   function tiersReached(m) { var n = 0; tpl().items.forEach(function (it) { if (m >= it.v) n++; }); return n; }
 
   /* ---------- 渲染 ---------- */
@@ -1634,7 +1624,7 @@
       ? '<div class="stats"><div><span>今天</span><b>≈¥' + cn(roundMoney(todayM)) + '</b></div>' +
         '<div><span>累计</span><b>≈¥' + cn(roundMoney(allM)) + '</b></div></div>'
       : '<div class="stats"><div><span>档位</span><b>' + reached.length + ' / ' + rows.length + '</b></div>' +
-        '<div><span>件数</span><b>' + lc.reduce(function (a, b) { return a + b; }, 0) + ' 件</b></div></div>';
+        '<div><span>最近</span><b>' + (reached.length ? reached[reached.length - 1].it.n : '—') + '</b></div></div>';
 
     return shareShell(dateStr, '<p class="kicker">' + kicker + '</p>' + head + stats + listHtml);
   }
